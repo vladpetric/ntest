@@ -4,6 +4,7 @@
 // GPLv3.txt and License.txt in the instructions subdirectory for details.
 
 // Evaluator source code
+#include <x86intrin.h>
 #include <sstream>
 #include "core/QPosition.h"
 #include "n64/bitextractor.h"
@@ -423,15 +424,11 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;
 
-    // EXTRACT_BITS_U64 takes four parameters:
-    // base value
-    // start bit (constant)
-    // count (constant)
-    // step (constant)
-
 #define BB_EXTRACT_STEP_PATTERN(START, COUNT, STEP) \
-    base2ToBase3Table[EXTRACT_BITS_U64(empty, (START), (COUNT), (STEP))] + \
-    base2ToBase3Table[EXTRACT_BITS_U64(mover, (START), (COUNT), (STEP))] * 2
+    (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)] +  \
+     2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
+
+
 
 	const TCoeff* const pD5 = pcoeffs+offsetJD5;
 	const TCoeff* const pD6 = pcoeffs+offsetJD6;
@@ -501,8 +498,8 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
 	const TCoeff* const pR4 = pcoeffs+offsetJR4;
 
 #define BB_EXTRACT_ROW_PATTERN(ROW) \
-    base2ToBase3Table[(empty >> (8 * (ROW))) & 0xff] + \
-    base2ToBase3Table[(mover >> (8 * (ROW))) & 0xff] * 2
+    (base2ToBase3Table[(empty >> (8 * (ROW))) & 0xff] + \
+    2 * base2ToBase3Table[(mover >> (8 * (ROW))) & 0xff])
 
     TConfig Row0 = BB_EXTRACT_ROW_PATTERN(0);
     value += pR1[Row0];
@@ -526,14 +523,11 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
     valueEdge += ValueEdgePatternsJ(pcoeffs, Row7, Row6);
 #undef BB_EXTRACT_ROW_PATTERN
-    
-    uint64_t flippedMover = flipDiagonal(mover);
-    uint64_t flippedEmpty = flipDiagonal(empty);
-
+   
 #define BB_EXTRACT_FLIPPED_ROW_PATTERN(ROW) \
-    base2ToBase3Table[(flippedEmpty >> (8 * (ROW))) & 0xff] + \
-    base2ToBase3Table[(flippedMover >> (8 * (ROW))) & 0xff] * 2
-	
+    (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (ROW), 8, 8>::value)] +  \
+    2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (ROW), 8, 8>::value)])
+
     TConfig Column0 = BB_EXTRACT_FLIPPED_ROW_PATTERN(0);
     value += pR1[Column0];
     TConfig Column1 = BB_EXTRACT_FLIPPED_ROW_PATTERN(1);
