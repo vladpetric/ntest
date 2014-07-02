@@ -33,6 +33,8 @@ static uint8_t insides[8][256];
 */
 u64 rowFlips[8][256];
 
+u64 baseRowFlips[256];
+
 /**
 * colFlips[col][insideBitPattern] is the bitboard containing the disks that will be flipped
 */
@@ -120,6 +122,9 @@ static void initInside(int index, int moverBitPattern) {
 
 static void initRowFlips(int row, u64 insideBitPattern) {
     rowFlips[row][insideBitPattern] = insideBitPattern << (row*8);
+    if (row == 0) {
+    	baseRowFlips[insideBitPattern] = insideBitPattern << (row*8);
+    }
 }
 
 static void initColFlips(int col, u64 insideBitPattern) {
@@ -274,30 +279,30 @@ u64 flips(int sq, u64 mover, u64 enemy) {
         const u64 col = sq & 7;
 
         u64 flip=0;
-		{
-		    const auto shift = row * 8;
-			const auto enemy256 = (enemy>>shift)&0xFF;
-			const auto flipIndex = insides[col][(mover>>shift)&outsides[col][enemy256]];
-			flip |= rowFlips[row][flipIndex];
-		}
-		{
-			const auto enemy256_extr = _pext_u64(enemy, m.d9mask);
-			const auto mover256_extr = _pext_u64(mover, m.d9mask);
-			const auto pos = std::min(row, col);
-			flip |= _pdep_u64(rowFlips[0][insides[pos][mover256_extr&outsides[pos][enemy256_extr]]], m.d9mask);
-		}
-		{
-			const auto colmask = 0x0101010101010101ULL << col;
-			const auto enemy256_extr = _pext_u64(enemy, colmask);
-			const auto mover256_extr = _pext_u64(mover, colmask);
-			flip |= _pdep_u64(rowFlips[0][insides[row][mover256_extr&outsides[row][enemy256_extr]]], colmask);
-		}
-		{
-			const auto enemy256_extr = _pext_u64(enemy, m.d7mask);
-			const auto mover256_extr = _pext_u64(mover, m.d7mask);
-			const auto pos = std::min(row, 7 - col);
-			flip |= _pdep_u64(rowFlips[0][insides[pos][mover256_extr&outsides[pos][enemy256_extr]]], m.d7mask);
-		}
+        {
+            const auto shift = row * 8;
+            const auto enemy256 = (enemy>>shift)&0xFF;
+            const auto flipIndex = insides[col][(mover>>shift)&outsides[col][enemy256]];
+            flip |= baseRowFlips[flipIndex] << shift;
+        }
+        {
+            const auto enemy256_extr = _pext_u64(enemy, m.d9mask);
+            const auto mover256_extr = _pext_u64(mover, m.d9mask);
+            const auto pos = std::min(row, col);
+            flip |= _pdep_u64(baseRowFlips[insides[pos][mover256_extr&outsides[pos][enemy256_extr]]], m.d9mask);
+        }
+        {
+            const auto colmask = 0x0101010101010101ULL << col;
+            const auto enemy256_extr = _pext_u64(enemy, colmask);
+            const auto mover256_extr = _pext_u64(mover, colmask);
+            flip |= _pdep_u64(baseRowFlips[insides[row][mover256_extr&outsides[row][enemy256_extr]]], colmask);
+        }
+        {
+            const auto enemy256_extr = _pext_u64(enemy, m.d7mask);
+            const auto mover256_extr = _pext_u64(mover, m.d7mask);
+            const auto pos = std::min(row, 7 - col);
+            flip |= _pdep_u64(baseRowFlips[insides[pos][mover256_extr&outsides[pos][enemy256_extr]]], m.d7mask);
+        }
 
         return flip;
     } else {
