@@ -4,7 +4,6 @@
 #include "test.h"
 #include "flips.h"
 
-extern u64 rowFlips[8][256];
 extern u64 d7Flips[11 + 1][256];
 extern int counts[8][256];
 
@@ -42,7 +41,6 @@ static void testFlipCounts() {
 
 static void testFlipTables() {
 	assertHexEquals(0x40ULL<<6*8, d7Flips[10][0x40]);
-	assertHexEquals(0x4000000000000000, rowFlips[7][0x40]);
 }
 
 static void testFlipFlips() {

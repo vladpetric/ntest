@@ -428,8 +428,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)] +  \
      2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
 
-
-
 	const TCoeff* const pD5 = pcoeffs+offsetJD5;
 	const TCoeff* const pD6 = pcoeffs+offsetJD6;
 	const TCoeff* const pD7 = pcoeffs+offsetJD7;
@@ -497,32 +495,36 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
 	const TCoeff* const pR3 = pcoeffs+offsetJR3;
 	const TCoeff* const pR4 = pcoeffs+offsetJR4;
 
-#define BB_EXTRACT_ROW_PATTERN(ROW) \
-    (base2ToBase3Table[(empty >> (8 * (ROW))) & 0xff] + \
-    2 * base2ToBase3Table[(mover >> (8 * (ROW))) & 0xff])
-
-    TConfig Row0 = BB_EXTRACT_ROW_PATTERN(0);
-    value += pR1[Row0];
-    TConfig Row1 = BB_EXTRACT_ROW_PATTERN(1);
-    value += pR2[Row1];
-    TConfig Row2 = BB_EXTRACT_ROW_PATTERN(2);
-    value += pR3[Row2];
-    TConfig Row3 = BB_EXTRACT_ROW_PATTERN(3);
-    value += pR4[Row3];
-    value += ValueTrianglePatternsJ(pcoeffs, Row0, Row1, Row2, Row3);
-    TConfig valueEdge = ValueEdgePatternsJ(pcoeffs, Row0, Row1);
-
-    TConfig Row4 = BB_EXTRACT_ROW_PATTERN(4);
-    value += pR4[Row4];
-    TConfig Row5 = BB_EXTRACT_ROW_PATTERN(5);
-    value += pR3[Row5];
-    TConfig Row6 = BB_EXTRACT_ROW_PATTERN(6);
-    value += pR2[Row6];
-    TConfig Row7 = BB_EXTRACT_ROW_PATTERN(7);
-    value += pR1[Row7];
-    value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Row7, Row6);
-#undef BB_EXTRACT_ROW_PATTERN
+    __m256i vect_mover_b3 = _mm256_i32gather_epi32(reinterpret_cast<const int *>(base2ToBase3Table), _mm256_cvtepu8_epi32(_mm_cvtsi64_si128(mover)), 4);
+    __m256i vect_empty_b3 = _mm256_i32gather_epi32(reinterpret_cast<const int *>(base2ToBase3Table), _mm256_cvtepu8_epi32(_mm_cvtsi64_si128(empty)), 4);
+    __m256i vect_pattern = _mm256_add_epi32(vect_empty_b3, _mm256_slli_epi32(vect_mover_b3, 1));
+    
+    const __m256i const_row_offsets_256 = _mm256_set_epi32(offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1);
+    __m256i vect_row_pattern_values_256 = _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4);
+    __m256i vect_interm_256 = _mm256_hadd_epi32(vect_row_pattern_values_256, vect_row_pattern_values_256);
+    vect_interm_256 = _mm256_hadd_epi32(vect_interm_256, vect_interm_256);
+    value += _mm256_extract_epi32(vect_interm_256, 0);
+    value += _mm256_extract_epi32(vect_interm_256, 4);
+    
+    const __m256i const_triangle_offsets_256 = _mm256_set_epi32(0, 6561, 2 * 6561, 3 * 6561, 3 * 6561, 2 * 6561, 6561, 0);
+    __m256i vect_triangle_rows_256 = _mm256_i32gather_epi32(reinterpret_cast<const int *>(fourRowsToTriangle),
+                                                            _mm256_add_epi32(vect_pattern, const_triangle_offsets_256), 4);
+    
+    vect_interm_256 = _mm256_hadd_epi32(vect_triangle_rows_256, vect_triangle_rows_256);
+    vect_interm_256 = _mm256_hadd_epi32(vect_interm_256, vect_interm_256);
+    u4 configs_triangle = _mm256_extract_epi32(vect_interm_256, 0);
+    value += ConfigPMValue(pcoeffs, configs_triangle&0xFFFF, C4J, offsetJTriangle);
+	value += ConfigPMValue(pcoeffs, configs_triangle>>16,    C4J, offsetJTriangle);
+    configs_triangle = _mm256_extract_epi32(vect_interm_256, 4);
+    value += ConfigPMValue(pcoeffs, configs_triangle&0xFFFF, C4J, offsetJTriangle);
+	value += ConfigPMValue(pcoeffs, configs_triangle>>16,    C4J, offsetJTriangle);
+    
+    TConfig Row0 = _mm256_extract_epi32(vect_pattern, 0);
+    TConfig Row1 = _mm256_extract_epi32(vect_pattern, 1);
+    TConfig Row6 = _mm256_extract_epi32(vect_pattern, 6);
+    TConfig Row7 = _mm256_extract_epi32(vect_pattern, 7);
+    
+    TConfig valueEdge = ValueEdgePatternsJ(pcoeffs, Row0, Row1) + ValueEdgePatternsJ(pcoeffs, Row7, Row6);
    
 #define BB_EXTRACT_FLIPPED_ROW_PATTERN(ROW) \
     (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (ROW), 8, 8>::value)] +  \

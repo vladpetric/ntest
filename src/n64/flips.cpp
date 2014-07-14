@@ -28,11 +28,6 @@ static uint8_t outsides[8][256];
 */
 static uint8_t insides[8][256];
 
-/**
-* rowFlips[row][insideBitPattern] is the bitboard containing the disks that will be flipped
-*/
-u64 rowFlips[8][256];
-
 u64 baseRowFlips[256];
 
 /**
@@ -121,7 +116,6 @@ static void initInside(int index, int moverBitPattern) {
 }
 
 static void initRowFlips(int row, u64 insideBitPattern) {
-    rowFlips[row][insideBitPattern] = insideBitPattern << (row*8);
     if (row == 0) {
     	baseRowFlips[insideBitPattern] = insideBitPattern << (row*8);
     }
