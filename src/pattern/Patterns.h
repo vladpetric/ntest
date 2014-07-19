@@ -73,6 +73,7 @@ u4 TritsToConfig(int* trits, int length);
 // potential mobility calculations
 //////////////////////////////////////////
 
+void InitBaseTables();
 void InitConfigToPotMob();
 void CleanConfigToPotMob();
 

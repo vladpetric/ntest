@@ -8,8 +8,10 @@
 
 #include "../core/BitBoard.h"
 #include "../core/Moves.h"
+#include "../pattern/Patterns.h"
+#include "../pattern/Stable.h"
+#include "../n64/test.h"
 #include "randomPlayTest.h"
-#include "test.h"
 
 using namespace std;
 
@@ -197,10 +199,67 @@ void RandomGameTester() {
                 finalFlipCount = lastFlipCount(sq, bb.mover);
             }
 
+            // Check stable discs.
+            uint64_t stable_mask = full_stable(bb.mover, bb.getEnemy());
+            uint64_t all_pieces_mask = bb.mover | bb.getEnemy();
+            
+            assert ((stable_mask & all_pieces_mask) == stable_mask);
+            assert ((stable_mask | all_pieces_mask) == all_pieces_mask);
+            
             const uint64_t flip = flips(sq, bb.mover, bb.getEnemy());
             const uint64_t squareMask = mask(sq);
+            if (((flip|squareMask) & stable_mask) != 0) {
+                stable_mask = full_stable(bb.mover, bb.getEnemy());
+                if (blackMove) {
+                    fprintf(stdout, "Black To Move\n");
+                } else {
+                    fprintf(stdout, "White To Move\n");
+                }
+                
+                bb.FPrint(stdout, blackMove);
+                fprintf(stdout, "\n");
+                char ch;
+                unsigned row;
+                for (row=0; row<8; row++) {
+                    fprintf(stdout, "%2d ",row+1);
+                    u1 e=u1(stable_mask >> row*8);
+
+                    for (unsigned col=0; col<8; col++) {
+                        if (e&1)
+                            ch='X';
+                        else
+                            ch='.';
+                        e>>=1;
+                        fprintf(stdout, "%c ", ch);
+                    }
+                    fprintf(stdout, "%2d\n",row+1);
+                }
+                stable_mask = edge_stable(bb.mover, bb.getEnemy());
+                fprintf(stdout, "\n");
+                for (row=0; row<8; row++) {
+                    fprintf(stdout, "%2d ",row+1);
+                    u1 e=u1(stable_mask >> row*8);
+
+                    for (unsigned col=0; col<8; col++) {
+                        if (e&1)
+                            ch='X';
+                        else
+                            ch='.';
+                        e>>=1;
+                        fprintf(stdout, "%c ", ch);
+                    }
+                    fprintf(stdout, "%2d\n",row+1);
+                }
+                assert(false);
+            }
+
             bb.mover ^= (flip|squareMask);
             bb.empty ^= squareMask;
+            
+            uint64_t new_stable_mask = full_stable(bb.mover, bb.getEnemy());
+            assert((stable_mask & new_stable_mask) == stable_mask);
+            assert((stable_mask | new_stable_mask) == new_stable_mask);
+            
 
             if (finalFlipCount != -1) {
                 assertTrue(bitCount(flip) == finalFlipCount);
@@ -225,6 +284,7 @@ void RandomGameTester() {
 }
 
 void TestRandomGames(int count) {
+    InitBaseTables();
     srand(20111004);
     for (int i = 0; i < count; ++i) {
         RandomGameTester();

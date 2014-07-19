@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "randomPlayTest.h"
 #include "test.h"
 #include "flips.h"
 
@@ -181,5 +180,4 @@ void testFlips() {
 	testFlipFlips();
 	testRandomFlips();
 	testNeighbors();
-    TestRandomGames(500);
 }
