@@ -15,7 +15,7 @@
 // Compression from base 4 to base 3
 /////////////////////////////////////////////////////////////
 
-uint32_t base2ToBase3Table[256];
+u4 base2ToBase3Table[256];
 u2 base3ToBase2Table[6561];
 u2 *base3ToORIDTable[maxORIDPatternSize];
 u2 *oRIDToBase3Table[maxORIDPatternSize];
@@ -27,10 +27,9 @@ u2 CRID6Reverse(u2 config);
 u2 CRID10Reverse(u2 config);
 u2 R33Reverse(u2 config);
 u2 ORIDReverse(u2 config, int size);
-u4	row2To2x4[6561],row1To2x4[6561],row2To2x5[6561],row1To2x5[6561],row2ToXX[6561],row1ToEdge[6561],row2ToEdge[6561];
-u4	row1To3x3[6561],row2To3x3[6561],row3To3x3[6561];
-u4	row1ToTriangle[6561],row2ToTriangle[6561],row3ToTriangle[6561],row4ToTriangle[6561];
-u4	configs2x5To2x4[9*6561];
+u4 row2To2x5[6561],row1To2x5[6561],row2ToXX[6561];
+u4 row1ToTriangle[6561],row2ToTriangle[6561],row3ToTriangle[6561],row4ToTriangle[6561];
+u4 configs2x5To2x4[9*6561];
 
 // pattern J info
 int coeffStartsJ[nMapsJ];
@@ -180,16 +179,6 @@ void InitTranslators() {
 	u4 value;
 	int trits[10], config;
 
-	// edge->2x4 translator
-	for (config=0; config<6561; config++) {
-		ConfigToTrits(config, 8, trits);
-		value1=TritsToConfig(trits, 4);
-		value2=TritsToRConfig(trits+4,4);
-		value=(value1<<16) + value2;
-		row2To2x4[config]=value;
-		row1To2x4[config]=value*81;
-	}
-
 	// edge->2x5 translator
 	for (config=0; config<6561; config++) {
 		ConfigToTrits(config, 8, trits);
@@ -212,28 +201,6 @@ void InitTranslators() {
 		value1=TritsToConfig(trits,4);
 		value2=TritsToConfig(trits+5, 4);
 		configs2x5To2x4[config]=value1+value2*81;
-	}
-
-	// edge -> edge pattern translator
-	for (config=0; config<6561; config++) {
-		ConfigToTrits(config, 8, trits);
-		// edge+2x components
-		row1ToEdge[config]=config*3;
-		row2ToEdge[config]=trits[1]+3*6561*trits[6];
-		// edge 2x4 components
-		row1ToEdge[config]+=(trits[2]+trits[3]*3+trits[4]*729+trits[5]*2187)<<16;
-		row2ToEdge[config]+=(trits[2]*9+trits[3]*27+trits[4]*81+trits[5]*243)<<16;
-	}
-
-	// edge->3x3 translator
-	for (config=0; config<6561; config++) {
-		ConfigToTrits(config, 8, trits);
-		value1=TritsToConfig(trits, 3);
-		value2=TritsToRConfig(trits+5,3);
-		value=(value1<<16) + value2;
-		row1To3x3[config]=value;
-		row2To3x3[config]=value*27;
-		row3To3x3[config]=value*27*27;
 	}
 
 	// edge->triangle translator

@@ -130,10 +130,9 @@ u2 R33Reverse(u2 config);
 u4 TritsToRConfig(int* trits, int length);
 
 // using two row values to create a larger pattern
-extern u4	row2To2x4[6561],row1To2x4[6561],row2To2x5[6561],row1To2x5[6561],row2ToXX[6561],row1ToEdge[6561],row2ToEdge[6561];
-extern u4	row1To3x3[6561],row2To3x3[6561],row3To3x3[6561];
-extern u4	row1ToTriangle[6561],row2ToTriangle[6561],row3ToTriangle[6561],row4ToTriangle[6561];
-extern u4	configs2x5To2x4[9*6561];
+extern u4 row2To2x5[6561],row1To2x5[6561],row2ToXX[6561];
+extern u4 row1ToTriangle[6561],row2ToTriangle[6561],row3ToTriangle[6561],row4ToTriangle[6561];
+extern u4 configs2x5To2x4[9*6561];
 
 inline u2 CMap::NIDs() const {
 	switch(idType) {

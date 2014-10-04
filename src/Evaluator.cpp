@@ -345,14 +345,11 @@ offsetJPAR = offsetJPMO + sizeJPMO; // sizeJPAR = 2;
 
 // value all the edge patterns. return the sum of the values.
 static INLINE_HINT TCoeff ValueEdgePatternsJ(const TCoeff* pcmove, TConfig config1, TConfig config2) {
-    TConfig configXX;
 	u4 configs2x5;
 	TCoeff value;
 
 	value=0;
-
-    configs2x5=row1To2x5[config1]+row2To2x5[config2];
-	configXX=config1 * 3 +row2ToXX[config2];
+	configs2x5 = row1To2x5[config1] + row2To2x5[config2];
 	value+=ConfigValue(pcmove, configs2x5&0xFFFF, C2x5J, offsetJC5);
 	value+=ConfigValue(pcmove, configs2x5>>16,    C2x5J, offsetJC5);
 	value+=ConfigValue(pcmove, config1 * 3 +row2ToXX[config2],CR1XXJ, offsetJEX);

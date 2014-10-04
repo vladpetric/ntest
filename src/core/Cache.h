@@ -98,7 +98,7 @@ public:
 	void Prefetch(u64 hash) {
 		hash &= nBuckets - 1;
 #if defined(_WIN32)
-		_mm_prefetch(reinterpret_cast<const char *>(buckets + hash), _MM_HINT_T0);
+		_mm_prefetch(reinterpret_cast<const char *>(buckets + hash), _MM_HINT_NTA);
 #elif __GNUC__ >=4
 		__builtin_prefetch(reinterpret_cast<const char *>(buckets + hash), 0, 0);
 #endif
