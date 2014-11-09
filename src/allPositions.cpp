@@ -13,6 +13,12 @@
 #include <utility>
 #include <vector>
 
+#define USE_GOOGLE_SPARSE_HASH
+
+#ifdef USE_GOOGLE_SPARSE_HASH
+#include <sparsehash/sparse_hash_set>
+#endif
+
 #include "core/BitBoard.h"
 #include "core/Moves.h"
 #include "Evaluator.h"
@@ -27,60 +33,53 @@ struct CBitBoardHash {
     }
 };
 
-struct CBitBoardComp {
-    u64 operator()(const CBitBoard& a, const CBitBoard& b) const {
-        return std::make_pair(a.mover, a.empty) < std::make_pair(b.mover, b.empty);
-    }
-};
-
+#ifdef USE_GOOGLE_SPARSE_HASH
+typedef google::sparse_hash_set<CBitBoard, CBitBoardHash> PlySet;
+#else
 typedef unordered_set<CBitBoard, CBitBoardHash> PlySet;
-//typedef set<CBitBoard, CBitBoardComp> PlySet;
+#endif
 
 void AllPositions() {
     CBitBoard bb;
     bb.Initialize();
-    PlySet current;
-    current.insert(bb);
-    PlySet next;
+    PlySet *current = new PlySet;
+    current->insert(bb);
+    PlySet *next = new PlySet;
     bool black_move = true;
     unsigned step;
-    for (step = 0; step < 11; ++step, black_move = !black_move) {
-        cout << "Move: " << step << " ply count " << current.size() << endl;
-        for (CBitBoard cbb: current) {
-            //cbb.FPrint(stdout, black_move);
-            //fprintf(stdout, "\n");
+    for (step = 0; step < 12; ++step, black_move = !black_move) {
+        cout << "Move: " << step << " ply count " << current->size() << endl;
+        for (CBitBoard cbb: *current) {
             u64 move_bits = mobility(cbb.mover, cbb.getEnemy());
             if (move_bits) {
                 CMoves moves;
                 moves.Set(move_bits);
-                while (moves.HasMoves()) {
+                CMove move;
+                while (moves.GetNext(move)) {
                     CBitBoard nbb = cbb;
-                    CMove move;
-                    moves.GetNext(move);
                     const int sq = move.Square();
                     const uint64_t flip = flips(sq, nbb.mover, nbb.getEnemy());
-                    //fprintf(stdout, "Flip Mask: %llx\n", flip);
                     const uint64_t square_mask = mask(sq);
                     nbb.mover ^= (flip | square_mask);
                     nbb.empty ^= square_mask;
                     nbb.InvertColors();
-                    next.insert(nbb.MinimalReflection());
+                    next->insert(nbb.MinimalReflection());
                 }
             } else {
-                u64 enemy_move_bits = mobility(cbb.getEnemy(), cbb.mover);
+                CBitBoard nbb = cbb;
+                u64 enemy_move_bits = mobility(nbb.getEnemy(), nbb.mover);
                 if (enemy_move_bits) {
-                    std::cout << "Pass encountered" << std::endl;
-                    cbb.InvertColors();
-                    next.insert(cbb.MinimalReflection());
-                } else {
-                    std::cout << "End of game encountered" << std::endl;
+                    nbb.InvertColors();
+                    next->insert(nbb.MinimalReflection());
                 }
             }
         }
-        std::swap(current, next);
-        next.clear();
+        PlySet *t = current;
+        current = next;
+        next = t;
+        next->clear();
     }
-    cout << "Move: " << step << " ply count " << current.size() << endl;
+    cout << "Move: " << step << " ply count " << current->size() << endl;
 }
 
 int main(int argc, char **argv) {
