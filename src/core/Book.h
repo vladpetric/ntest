@@ -10,6 +10,7 @@
 
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <iostream>
 #include <vector>
 #include "../n64/utils.h"
@@ -176,7 +177,7 @@ class CSearchInfo;
 const int nEmptyBookMax=NN-3;
 
 //! A book contains a set of positions and the value of those positions.
-//! It is basically a map<CMinimalReflection, CBookData> along with routines for access and I/O.
+//! It is basically a unordered_map<CMinimalReflection, CBookData> along with routines for access and I/O.
 class CBook {
 public:
 	CBook();
@@ -209,7 +210,8 @@ public:
 	const CBookData* FindData(const CMinimalReflection& mr) const;
 	const CBookData* FindData(const CMinimalReflection& mr, int nEmpty) const;
 	void PrintDrawTree(CQPosition pos) const;
-	void PrintDrawTree(CQPosition pos, const std::string& pre, std::map<CMinimalReflection, std::string>& transpositions) const;
+    template<typename Collection>
+	void PrintDrawTree(CQPosition pos, const std::string& pre, Collection& transpositions) const;
 	bool FindQuestionableNode(CQPosition& questionablePosition, bool& drawToMover, const CQPosition& initalPosition, i2 drawCutoff, i2 deviationCutoff);
 	bool FindQuestionableNode(CQPosition& questionablePosition, bool& drawToMover, const CQPosition& initalPosition, i2 drawCutoff, i2 deviationCutoff, int maxDepth);
 	static bool IsQuestionable(bool& drawToMover, i2 drawCutoff, i2 deviationCutoff, const CBookValue& bookValue);
@@ -251,7 +253,12 @@ public:
 
 
 protected:
-	std::map<CMinimalReflection,CBookData> entries[nEmptyBookMax];
+    struct cmr_hash {
+        u64 operator()(const CMinimalReflection& cmr) const {
+            return cmr.Hash();
+        }
+    };
+	std::unordered_map<CMinimalReflection,CBookData,cmr_hash> entries[nEmptyBookMax];
 	bool m_fAltered;	//!< true if book needs to be stored. Reset on read and write, set on calling any nonconst public function.
 
 	CBookData* FindNonconstData(const CMinimalReflection& mr);

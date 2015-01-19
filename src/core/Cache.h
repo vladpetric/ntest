@@ -112,6 +112,5 @@ private:
 	i4 queries, readMoves, readValues, writes;
 	CCacheData* buckets;
 	u4 nBuckets;
-	u4 mask;	// nBuckets-1
 	int staleCount;
 };

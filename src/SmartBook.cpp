@@ -38,12 +38,11 @@ void CSmartBook::PlayEdmundGame(const CQPosition& pos, CMoveValue& mv) {
 
 void CSmartBook::PlayEdmundGames(int iEdmund) {
 	int nEmpty;
-	map<CMinimalReflection,CBookData>::iterator i;
 	CMoveValue mv;
 
 	for (nEmpty=0; nEmpty<nEmptyBookMax; nEmpty++) {
 		bool fBlackMove=!(nEmpty&1);
-		for (i=entries[nEmpty].begin(); i!=entries[nEmpty].end(); i++) {
+		for (auto i=entries[nEmpty].begin(); i!=entries[nEmpty].end(); i++) {
 			CQPosition pos((*i).first, fBlackMove);
 			if (GetEdmundMove(pos, mv, true, iEdmund)) {
 				PlayEdmundGame(pos, mv);
@@ -379,7 +378,7 @@ void CSmartBook::NegamaxAndCorrectAll(int& nSearches) {
 			}
 		}
 		else {
-			for (i=entries[nEmpty].begin(); i!=entries[nEmpty].end(); i++) {
+			for (auto i=entries[nEmpty].begin(); i!=entries[nEmpty].end(); i++) {
 				pos.Initialize((*i).first,true);
 				NegamaxAndCorrectPosition(pos, &((*i).second), nSearches);
 			}

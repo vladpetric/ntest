@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#define USE_GOOGLE_SPARSE_HASH
+// #define USE_GOOGLE_SPARSE_HASH
 
 #ifdef USE_GOOGLE_SPARSE_HASH
 #include <sparsehash/sparse_hash_set>

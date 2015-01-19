@@ -24,7 +24,7 @@ using namespace std;
 // CComputerDefaults
 ////////////////////////////////////////
 
-CComputerDefaults::CComputerDefaults() : sCalcParams("s12"), cEval('J'), cCoeffSet('A')
+CComputerDefaults::CComputerDefaults() : sCalcParams("s26"), cEval('J'), cCoeffSet('A')
 , iPruneEndgame(5), iPruneMidgame(4), booklevel(kNegamaxBook), iEdmund(1) {
 	vContempts[0]=0;
 	vContempts[1]=0;

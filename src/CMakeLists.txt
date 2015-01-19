@@ -41,6 +41,8 @@ endif()
 
 add_executable(randomEvalGen randomEvalGen.cpp)
 target_link_libraries(randomEvalGen mainlib core game patterns odk n64)
+add_executable(bookplay bookplay.cpp)
+target_link_libraries(bookplay mainlib core game patterns odk n64)
 
 add_executable(allpos allPositions.cpp)
 target_link_libraries(allpos mainlib core game patterns odk n64)
