@@ -1708,8 +1708,13 @@ bool CBook::operator==(const CBook& b) const {
         if (entries[i].size()!=b.entries[i].size())
             return false;
         std::map<CMinimalReflection,CBookData> ordered_a, ordered_b;
-        ordered_a.insert(entries[i].begin(), entries[i].end());
-        ordered_b.insert(b.entries[i].begin(), entries[i].end());
+        // Visual Studio 2013 crashes if I use the insert method on ordered_a, ordered_b
+        for (auto it = entries[i].begin(); it != entries[i].end(); ++it) {
+            ordered_a[it->first] = it->second;
+        }
+        for (auto it = b.entries[i].begin(); it != b.entries[i].end(); ++it) {
+            ordered_b[it->first] = it->second;
+        }
         auto it=ordered_a.begin();
         auto bit=ordered_b.begin();
         for ( ; it!=ordered_a.end(); it++, bit++) {
