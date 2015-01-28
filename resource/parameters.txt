@@ -1,5 +1,5 @@
-512 2.4
-JA s26 0 0 0 0 1 1 -1 0
-JA s26 0 0 0 0 1 1 -1 1
+2048 2.4
+JA s26 0 0 0 0 1 0 -1 0
+JA s26 0 0 0 0 1 0 -1 1
 BookWriteFormat 2
 DrawTreeLimit 4.25 4.5

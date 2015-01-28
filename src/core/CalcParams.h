@@ -24,7 +24,7 @@ extern double tSetStale;
 
 // maximum amount of memory to allocate to cache table.
 //	should be a bit less than the total RAM on the computer.
-extern int maxCacheMem;
+extern uint64_t maxCacheMem;
 
 void SetMatchTime(double atMatch);
 

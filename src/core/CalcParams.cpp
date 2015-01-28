@@ -23,7 +23,7 @@ double dGHz;	//	double dGHz - Approx processor speed
 double tSetStale=0.17;	// time to SetStale() in seconds... so we don't lose on time
 
 // maximum memory for cache
-int maxCacheMem=25<<20; // can be up to 90<<20 on 128MB NT machine
+uint64_t maxCacheMem=4<<30; // 4 GB
 
 void SetMatchTime(double aMatchTime) {
 	if (aMatchTime<=0)
@@ -103,9 +103,9 @@ void CCalcParamsFixedHeight::SetHeight(CHeightInfo hi) {
 
 int CCalcParamsFixedHeight::LogCacheSize(int aPrune) const {
 	if (aPrune)
-		return 17+(hiMax.height-12)/2;	// appropriate for MPC searcher
+		return 17+(hiMax.height-2)/2;	// appropriate for MPC searcher
 	else
-		return 7+(hiMax.height*3)/2;	// appropriate for full-width searcher
+		return 10+(hiMax.height*3)/2;	// appropriate for full-width searcher
 }
 
 void CCalcParamsFixedHeight::Out(ostream& os) const {
@@ -203,7 +203,7 @@ void CCalcParamsStandard::CalcHeights() {
 
 int CCalcParamsStandard::LogCacheSize(int aPrune) const {
 	if (aPrune)
-		return 17+(hMidgame-12)/2;	// appropriate for MPC searcher
+        return 17+(hMidgame)/2;	// appropriate for MPC searcher
 	else
 		return 7+(hMidgame*3)/2;	// appropriate for full-width searcher
 }
