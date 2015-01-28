@@ -41,7 +41,6 @@ void ReadMachineParameters(istream& isBig) {
 	getline(isBig, sLine);
 	std::istringstream is(sLine.c_str());
 
-	maxCacheMem=500;
 	dGHz=2;
 
 	is >> maxCacheMem >> dGHz;
@@ -83,7 +82,7 @@ int main(int argc, char **argv) {
     cout << "Ntest version as of " << __DATE__ << "\n";
     cout << "Copyright 1999-2014 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
     try {
-        maxCacheMem = 1024 << 20; //1GB 
+        maxCacheMem = 2 << 30; //2GB 
         Init();
 		CComputerDefaults cd1, cd2;
         ReadParameters(cd1, cd2);
@@ -100,13 +99,11 @@ int main(int argc, char **argv) {
         fPrintCorrections = false;
         
         CPlayer* p0 = new CPlayerComputer(cd1);
-        CPlayer* p1 = new CPlayerComputer(cd2);
         for (unsigned i = 0; i < 100000; ++i) {
-            CGame(p0, p1, 15 * 60, "").Play();
+            CGame(p0, p0, 15 * 60, "").Play();
             cout << "\n\n\n Done with Game " << i << "\n\n" << endl;
         }
         delete p0;
-        delete p1;
 	} catch(std::string exception) {
 		cout << exception << "\n";
 		return -1;

@@ -228,11 +228,14 @@ void CBookData::StoreLeaf(const CHeightInfoX& hixNew, CValue v, const CBoni& bon
 
     // update the node if the new value is more important
     if (hixNew>=hi) {
-        IncreaseHeight(hixNew);
+        if (IsLeaf()) {
+            IncreaseHeight(hixNew);
 
-        assert(IsLeaf());
-        values.SetLeaf(v, hixNew.WldProven());
-        values.AssignLeaf(boni);
+            values.SetLeaf(v, hixNew.WldProven());
+            values.AssignLeaf(boni);
+        } else {
+            std::cout << "WARNING: StoreLeaf asked to store non-leaf" << std::endl;
+        }
     }
 }
 
