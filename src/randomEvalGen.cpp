@@ -14,6 +14,7 @@
 #include "Evaluator.h"
 #include "Search.h"
 #include "pattern/FastFlip.h"
+#include "n64/flips.h"
 
 using namespace std;
 

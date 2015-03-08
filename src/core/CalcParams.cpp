@@ -103,9 +103,9 @@ void CCalcParamsFixedHeight::SetHeight(CHeightInfo hi) {
 
 int CCalcParamsFixedHeight::LogCacheSize(int aPrune) const {
 	if (aPrune)
-		return 17+(hiMax.height-2)/2;	// appropriate for MPC searcher
+		return 17+(hiMax.height-10)/2;	// appropriate for MPC searcher
 	else
-		return 10+(hiMax.height*3)/2;	// appropriate for full-width searcher
+		return 9+(hiMax.height*3)/2;	// appropriate for full-width searcher
 }
 
 void CCalcParamsFixedHeight::Out(ostream& os) const {
@@ -203,7 +203,7 @@ void CCalcParamsStandard::CalcHeights() {
 
 int CCalcParamsStandard::LogCacheSize(int aPrune) const {
 	if (aPrune)
-        return 17+(hMidgame)/2;	// appropriate for MPC searcher
+		return 17+(hMidgame-12)/2;	// appropriate for MPC searcher
 	else
 		return 7+(hMidgame*3)/2;	// appropriate for full-width searcher
 }

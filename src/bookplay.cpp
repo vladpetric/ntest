@@ -41,7 +41,7 @@ void ReadMachineParameters(istream& isBig) {
 	getline(isBig, sLine);
 	std::istringstream is(sLine.c_str());
 
-	dGHz=2;
+	dGHz=2.5;
 
 	is >> maxCacheMem >> dGHz;
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
     cout << "Ntest version as of " << __DATE__ << "\n";
     cout << "Copyright 1999-2014 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
     try {
-        maxCacheMem = 2 << 30; //2GB 
+        maxCacheMem = 4 << 30; //4GB 
         Init();
 		CComputerDefaults cd1, cd2;
         ReadParameters(cd1, cd2);
