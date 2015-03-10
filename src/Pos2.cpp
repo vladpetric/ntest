@@ -1,5 +1,5 @@
 // Copyright Chris Welty
-//	All Rights Reserved
+// All Rights Reserved
 // This file is distributed subject to GNU GPL version 3. See the files
 // GPLv3.txt and License.txt in the instructions subdirectory for details.
 
@@ -57,8 +57,19 @@ void Pos2::Initialize(const CBitBoard& m_bb, bool m_fBlackMove) {
 void Pos2::MakeMoveBB(int square) {
     int nflipped;
     u64 flip = flips(square, m_bb.mover, ~(m_bb.mover | m_bb.empty)) | mask(square);
+    assert ((m_stable & flip) == 0);
     m_bb.empty ^= mask(square);
     m_bb.mover ^= flip;
+    if (flip & m_stable_trigger) {
+      //std::cout << "Enhancing stable region" << std::endl;
+      m_stable = stable_discs(m_bb.mover, ~(m_bb.mover | m_bb.empty), m_bb.empty,
+                              m_stable);
+      //Print();
+      //PrintStable();
+      assert ((m_stable & ~m_bb.empty) == m_stable);
+      m_stable_trigger = stable_next_mask(m_stable, ~m_bb.empty);
+      //PrintStableNext();
+    }
     m_bb.InvertColors();
  
     m_fBlackMove=!m_fBlackMove;
@@ -99,6 +110,82 @@ void Pos2::FPrint(FILE* fp) const {
                 base2ToBase3Table[(black >> (row * 8))& 0xff] * 2;
 
         FPrintRow(fp, row, rowPattern, nColors);
+    }
+
+    FPrintHeader(fp);
+
+    fprintf(fp, "\nBlack: %d  White: %d  Empty: %d\n\n",nColors[2],nColors[0],nColors[1]);
+    fprintf(fp, "%s to move\n",m_fBlackMove?"Black":"White");
+}
+void Pos2::PrintStable() const {
+    FPrintStable(stdout);
+}
+void Pos2::PrintStableNext() const {
+    FPrintStableNext(stdout);
+}
+void Pos2::FPrintStable(FILE* fp) const {
+    int row, nColors[3];
+
+    FPrintHeader(fp);
+
+    uint64_t black;
+    if (this->BlackMove()) {
+        black = m_bb.mover;
+    } else {
+        black = ~(m_bb.mover | m_bb.empty);
+    }
+
+
+    nColors[0]=nColors[1]=nColors[2]=0;
+    for (row=0; row<N; row++) {
+        uint64_t bitrow = (m_stable >> (row * 8))& 0xff;
+        // print row number
+        fprintf(fp, "%-2d", row+1);
+
+        // break row apart into values and print value
+        for (int col=0; col<N; col++) {
+            auto item = bitrow & 1;
+            bitrow >>= 1;
+            fprintf(fp, "%c ", item? 'X' : '-');
+        }
+
+        //print row number at right of row
+        fprintf(fp, "%2d\n", row+1);
+    }
+
+    FPrintHeader(fp);
+
+    fprintf(fp, "\nBlack: %d  White: %d  Empty: %d\n\n",nColors[2],nColors[0],nColors[1]);
+    fprintf(fp, "%s to move\n",m_fBlackMove?"Black":"White");
+}
+void Pos2::FPrintStableNext(FILE* fp) const {
+    int row, nColors[3];
+
+    FPrintHeader(fp);
+
+    uint64_t black;
+    if (this->BlackMove()) {
+        black = m_bb.mover;
+    } else {
+        black = ~(m_bb.mover | m_bb.empty);
+    }
+
+
+    nColors[0]=nColors[1]=nColors[2]=0;
+    for (row=0; row<N; row++) {
+        uint64_t bitrow = (m_stable_trigger >> (row * 8))& 0xff;
+        // print row number
+        fprintf(fp, "%-2d", row+1);
+
+        // break row apart into values and print value
+        for (int col=0; col<N; col++) {
+            auto item = bitrow & 1;
+            bitrow >>= 1;
+            fprintf(fp, "%c ", item? 'X' : '-');
+        }
+
+        //print row number at right of row
+        fprintf(fp, "%2d\n", row+1);
     }
 
     FPrintHeader(fp);

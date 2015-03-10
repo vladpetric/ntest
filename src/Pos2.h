@@ -13,6 +13,7 @@
 #include "n64/utils.h"
 #include "core/Moves.h"
 #include "pattern/patternJ.h"
+#include "Stable.hpp"
 
 // global variables
 
@@ -25,6 +26,10 @@ public:
     // print the position
     void Print() const;
     void FPrint(FILE* logfile) const;
+    void PrintStable() const;
+    void FPrintStable(FILE* logfile) const;
+    void PrintStableNext() const;
+    void FPrintStableNext(FILE* logfile) const;
 
     // get the board text
     char* GetText(char* sBoard) const;
@@ -61,6 +66,8 @@ private:
     int CalcMovesAndPassBB(CMoves& moves, const CMoves& submoves);
 
     bool m_fBlackMove;
+    uint64_t m_stable = 0;
+    uint64_t m_stable_trigger = Corners;
     CBitBoard m_bb;
 
 };
