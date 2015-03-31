@@ -451,6 +451,7 @@ inline void ValueTree(Pos2& pos2, int height, CValue alpha, CValue beta, CMoves&
                 vSubnode=pos2.GetBB().NMoverMobilities();
             }
             else {
+                cache->Prefetch(pos2.GetBB().Hash());
                 // Get move values with fastest-first adjustment.
                 vSubnode=StaticValue(pos2, iff);
 

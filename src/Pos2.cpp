@@ -64,11 +64,8 @@ void Pos2::MakeMoveBB(int square) {
       //std::cout << "Enhancing stable region" << std::endl;
       m_stable = stable_discs(m_bb.mover, ~(m_bb.mover | m_bb.empty), m_bb.empty,
                               m_stable);
-      //Print();
-      //PrintStable();
       assert ((m_stable & ~m_bb.empty) == m_stable);
       m_stable_trigger = stable_next_mask(m_stable, ~m_bb.empty);
-      //PrintStableNext();
     }
     m_bb.InvertColors();
  
