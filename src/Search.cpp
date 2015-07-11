@@ -355,7 +355,15 @@ inline bool ValueMove(Pos2& pos2, int height, int hChild, CValue alpha, CValue b
     // make move
     Pos2 save_pos = pos2;
     pos2.MakeMoveBB(move.Square());
-
+    
+    if (pos2.m_stable != save_pos.m_stable) {
+        int score_upper_bound = kStoneValue * (NN - 2 * static_cast<CValue>(pos2.m_stable_opponent));
+        //int score_lower_bound = kStoneValue * (2 * static_cast<CValue>(pos2.m_stable_mover) - NN);
+        if (score_upper_bound <= best.value) {
+            pos2 = save_pos;
+            return false;
+        }
+    }
     // get value,possibly using negascout
     if (fNegascout) {
         TREEDEBUG_BEFORE_NEGASCOUT;

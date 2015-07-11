@@ -62,14 +62,14 @@ public:
         return m_bb.CalcMobility(nMovesPlayer,nMovesOpponent);
     }
 
-private:
-    int CalcMovesAndPassBB(CMoves& moves, const CMoves& submoves);
-
-    bool m_fBlackMove;
     uint64_t m_stable = 0;
     uint64_t m_stable_trigger = Corners;
     CBitBoard m_bb;
-
+    uint8_t m_stable_mover = 0;
+    uint8_t m_stable_opponent = 0;
+    bool m_fBlackMove;
+private:
+    int CalcMovesAndPassBB(CMoves& moves, const CMoves& submoves);
 };
 
 inline int Pos2::TerminalValue() const {
@@ -79,10 +79,20 @@ inline int Pos2::TerminalValue() const {
 inline void Pos2::PassBase() {
     m_fBlackMove=!m_fBlackMove;
     m_bb.mover = ~(m_bb.mover | m_bb.empty);
+    if (m_stable) {
+        auto stable_swap = m_stable_mover;
+        m_stable_mover = m_stable_opponent;
+        m_stable_opponent = stable_swap;
+    }
 }
 
 inline void Pos2::PassBB() {
     m_fBlackMove = !m_fBlackMove;
     m_bb.InvertColors();
+    if (m_stable) {
+        auto stable_swap = m_stable_mover;
+        m_stable_mover = m_stable_opponent;
+        m_stable_opponent = stable_swap;
+    }
 }
 #endif // #ifdef H_POS2

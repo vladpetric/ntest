@@ -44,6 +44,7 @@ protected:
 	i4 Order() const;
 
 	friend class CBookDataCompressed;
+    friend class CBook;
 };
 
 //! CHeightInfo where we're guaranteed to know whether this is a probable solve

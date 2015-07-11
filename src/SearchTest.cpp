@@ -267,5 +267,5 @@ void TestStaticValue() {
 void TestSearch() {
 	TestStaticValue();
 	TestIterativeValue();
-	TestEndgameAccuracy();
+	//TestEndgameAccuracy();
 }

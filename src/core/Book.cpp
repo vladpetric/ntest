@@ -4,6 +4,7 @@
 // GPLv3.txt and License.txt in the instructions subdirectory for details.
 
 #include <cassert>
+#include <cinttypes>
 #include <errno.h>
 #include <stdio.h>
 #include <string>
@@ -11,6 +12,13 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
+#include <gtest/gtest.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "../odk/OsObjects.h"
 
 #include "Moves.h"
@@ -20,6 +28,7 @@
 #include "Store.h"
 
 using namespace std;
+using namespace testing;
 
 ////////////////////////////////////////////////////////////
 // CBookValue
@@ -1866,4 +1875,62 @@ void CBook::StoreIterativeResult(const CBitBoard& bb, int nBest, int nEvalOld,in
             }
         }
     }            
+}
+
+template<typename T>
+static T stream_read(std::ifstream& in) {
+    T val;
+    GTEST_CHECK_(in.good());
+    in.read(reinterpret_cast<char *>(&val), sizeof(val));
+    return val;
+}
+
+void CBook::ReadStructFile(const char* filename) {
+    using namespace std;
+    ifstream in(filename);
+    GTEST_CHECK_(in.good()) << "Failed to open " << filename;
+
+    uint64_t mover, empty;
+    uint64_t entries = 0;
+    uint64_t solved = 0;
+    while (in.good() && !in.eof()) {
+        CBitBoard cb;
+        CBookData bookdata;
+        bookdata.values.fAssigned = true;
+        bookdata.values.fSet = true;
+        cb.mover = stream_read<uint64_t>(in);
+        if (in.eof()) break;
+        cb.empty = stream_read<uint64_t>(in);
+        GTEST_CHECK_((cb.mover & cb.empty) == 0);
+        int32_t height = stream_read<int32_t>(in);
+        int32_t iPrune = stream_read<int32_t>(in);
+
+        auto bookdata_cutoff = stream_read<int32_t>(in);
+        bookdata.nGames[0] = stream_read<uint32_t>(in);
+        bookdata.nGames[1] = stream_read<uint32_t>(in);
+        int16_t black = stream_read<int16_t>(in); // bookdata.values.vBlack
+        int16_t white = stream_read<int16_t>(in); // bookdata.values.vWhite
+        CValue bookdata_vHeuristic = stream_read<int16_t>(in);
+        bookdata.values.fWldProven = stream_read<bool>(in);
+        if (bookdata.values.fWldProven) {
+            GTEST_CHECK_((black + white == 0) || (black == white));
+            ++solved;
+        }
+        bool book_fRoot = stream_read<bool>(in);
+        bool fKnownSolve = stream_read<bool>(in);
+        bool fWLD = stream_read<bool>(in);
+        unsigned empties = bitCount(cb.empty);
+        CHeightInfoX hi(height, iPrune, fWLD, empties);
+        // std::cout << iPrune << " fKnownSolve: " << fKnownSolve << " fWLD: " << fWLD << " hi.WldProven(): " << hi.WldProven() << " bookdata.values.fWldProven: " << bookdata.values.fWldProven <<  " empties: " << empties << '\n';
+        GTEST_CHECK_(hi.WldProven() == bookdata.values.fWldProven);
+        if (book_fRoot) {
+            StoreRoot(cb, hi, bookdata_vHeuristic, bookdata.cutoff);
+        } else {
+            StoreLeaf(cb, hi, bookdata_vHeuristic);
+        } 
+        ++entries;
+    }
+    std::cout << "read: " << entries << " solved: " << solved << std::endl;
+    m_store = std::auto_ptr<Store>(new File("converted.JA_s26.book"));
+    Write();
 }

@@ -60,13 +60,22 @@ void Pos2::MakeMoveBB(int square) {
     assert ((m_stable & flip) == 0);
     m_bb.empty ^= mask(square);
     m_bb.mover ^= flip;
+
     if (flip & m_stable_trigger) {
-      //std::cout << "Enhancing stable region" << std::endl;
-      m_stable = stable_discs(m_bb.mover, ~(m_bb.mover | m_bb.empty), m_bb.empty,
-                              m_stable);
-      assert ((m_stable & ~m_bb.empty) == m_stable);
+      auto opponent = ~(m_bb.mover | m_bb.empty);
+      
+      m_stable = stable_discs(m_bb.mover, opponent, m_bb.empty, m_stable);
       m_stable_trigger = stable_next_mask(m_stable, ~m_bb.empty);
+      
+      m_stable_mover = bitCount(m_stable & m_bb.mover);
+      m_stable_opponent = bitCount(m_stable & opponent);
     }
+    if (m_stable) {
+        auto stable_swap = m_stable_mover;
+        m_stable_mover = m_stable_opponent;
+        m_stable_opponent = stable_swap;
+    }
+
     m_bb.InvertColors();
  
     m_fBlackMove=!m_fBlackMove;

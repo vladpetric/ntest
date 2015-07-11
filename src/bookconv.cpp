@@ -86,24 +86,9 @@ int main(int argc, char **argv) {
         Init();
 		CComputerDefaults cd1, cd2;
         ReadParameters(cd1, cd2);
-        cd1.vContempts[0] = 0;
-        cd1.vContempts[1] = 0;
-        cd2.vContempts[0] = 0;
-        cd2.vContempts[1] = 0;
-        cd1.fsPrint = 0;
-        cd2.fsPrint = 0;
-        fPrintExtensionInfo = false;
-        fPrintBoard = false;
-        fPrintAbort = false;
-        extern bool fPrintCorrections;
-        fPrintCorrections = false;
-        
-        CPlayer* p0 = new CPlayerComputer(cd1);
-        for (unsigned i = 0; i < 100000; ++i) {
-            CGame(p0, p0, 15 * 60, "F4").Play();
-            cout << "\n\n\n Done with Game " << i << "\n\n" << endl;
-        }
-        delete p0;
+
+        CBook book;
+        book.ReadStructFile("coefficients/inline.JA_s26.book");
 	} catch(std::string exception) {
 		cout << exception << "\n";
 		return -1;

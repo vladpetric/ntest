@@ -33,19 +33,22 @@ add_subdirectory(game)
 file(GLOB HEADER_FILES *.h *.hpp)
 add_library(mainlib GameX.cpp Evaluator.cpp EvalTest.cpp MPCCalc.cpp NtestStream.cpp options.cpp PlayerComputer.cpp Pos2.cpp Pos2Test.cpp Search.cpp SearchTest.cpp SearchParams.cpp SmartBook.cpp SpeedTest.cpp treedebug.cpp Stable.cpp ${HEADER_FILES})
 
+find_package(GTest REQUIRED)
 add_executable(ntest main.cpp)
-target_link_libraries(ntest mainlib core game patterns odk n64)
+target_link_libraries(ntest mainlib core game patterns odk n64 ${GTEST_LIBRARY})
 if(MSVC OR "${NTEST_MINGW_BUILD}")
     target_link_libraries(ntest wsock32)
 endif()
 
 add_executable(randomEvalGen randomEvalGen.cpp)
-target_link_libraries(randomEvalGen mainlib core game patterns odk n64)
+target_link_libraries(randomEvalGen mainlib core game patterns odk n64 ${GTEST_LIBRARY})
 add_executable(bookplay bookplay.cpp)
-target_link_libraries(bookplay mainlib core game patterns odk n64)
+target_link_libraries(bookplay mainlib core game patterns odk n64 ${GTEST_LIBRARY})
+add_executable(bookconv bookconv.cpp)
+target_link_libraries(bookconv mainlib core game patterns odk n64 ${GTEST_LIBRARY})
 
 add_executable(allpos allPositions.cpp)
-target_link_libraries(allpos mainlib core game patterns odk n64)
+target_link_libraries(allpos mainlib core game patterns odk n64 ${GTEST_LIBRARY})
 
 add_test(ntest_basic ntest o)
 
