@@ -13,7 +13,6 @@
 #include <sstream>
 #include <iomanip>
 #include <fstream>
-#include <gtest/gtest.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,7 +27,6 @@
 #include "Store.h"
 
 using namespace std;
-using namespace testing;
 
 ////////////////////////////////////////////////////////////
 // CBookValue
@@ -1880,7 +1878,7 @@ void CBook::StoreIterativeResult(const CBitBoard& bb, int nBest, int nEvalOld,in
 template<typename T>
 static T stream_read(std::ifstream& in) {
     T val;
-    GTEST_CHECK_(in.good());
+    assert(in.good());
     in.read(reinterpret_cast<char *>(&val), sizeof(val));
     return val;
 }
@@ -1888,7 +1886,7 @@ static T stream_read(std::ifstream& in) {
 void CBook::ReadStructFile(const char* filename) {
     using namespace std;
     ifstream in(filename);
-    GTEST_CHECK_(in.good()) << "Failed to open " << filename;
+    assert(in.good());
 
     uint64_t mover, empty;
     uint64_t entries = 0;
@@ -1901,7 +1899,7 @@ void CBook::ReadStructFile(const char* filename) {
         cb.mover = stream_read<uint64_t>(in);
         if (in.eof()) break;
         cb.empty = stream_read<uint64_t>(in);
-        GTEST_CHECK_((cb.mover & cb.empty) == 0);
+        assert((cb.mover & cb.empty) == 0);
         int32_t height = stream_read<int32_t>(in);
         int32_t iPrune = stream_read<int32_t>(in);
 
@@ -1913,7 +1911,7 @@ void CBook::ReadStructFile(const char* filename) {
         CValue bookdata_vHeuristic = stream_read<int16_t>(in);
         bookdata.values.fWldProven = stream_read<bool>(in);
         if (bookdata.values.fWldProven) {
-            GTEST_CHECK_((black + white == 0) || (black == white));
+            assert((black + white == 0) || (black == white));
             ++solved;
         }
         bool book_fRoot = stream_read<bool>(in);
@@ -1922,7 +1920,7 @@ void CBook::ReadStructFile(const char* filename) {
         unsigned empties = bitCount(cb.empty);
         CHeightInfoX hi(height, iPrune, fWLD, empties);
         // std::cout << iPrune << " fKnownSolve: " << fKnownSolve << " fWLD: " << fWLD << " hi.WldProven(): " << hi.WldProven() << " bookdata.values.fWldProven: " << bookdata.values.fWldProven <<  " empties: " << empties << '\n';
-        GTEST_CHECK_(hi.WldProven() == bookdata.values.fWldProven);
+        assert(hi.WldProven() == bookdata.values.fWldProven);
         if (book_fRoot) {
             StoreRoot(cb, hi, bookdata_vHeuristic, bookdata.cutoff);
         } else {
