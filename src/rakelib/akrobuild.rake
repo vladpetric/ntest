@@ -12,7 +12,8 @@ $LINKER = $COMPILER
 $LINKER_FLAGS = $COMPILE_FLAGS
 $MODE_LINKER_FLAGS = $MODE_COMPILE_FLAGS
 
-$CPP_EXTENSIONS = [".cc", ".cpp", ".cxx", ".c++"]
+$HEADER_EXTENSIONS = [".h", ".hpp"]
+$CPP_EXTENSIONS = [".c", ".cc", ".cpp", ".cxx", ".c++"]
 
 module Util
   def Util.make_relative_path(path)
@@ -83,6 +84,20 @@ module FileMapper
     raise "No sources for base name #{file}" if srcs.length == 0
     srcs[0]
   end
+
+  # Maps header file to its corresponding cpp file, if it exists
+  # E.g., a/b/c.h maps to a/b/c.cpp, if a/b/c.cpp exists, otherwise nil
+  def FileMapper.map_header_to_cpp(path)
+    rel_path = Util.make_relative_path(path)
+    # file is not local
+    return nil if rel_path.nil?
+    srcs = $HEADER_EXTENSIONS.keep_if{|ext| path.end_with?(ext)}.collect{ |ext|
+      base_path = path[0..-ext.length-1]
+      $CPP_EXTENSIONS.map{|cppext| base_path + cppext}.keep_if{|file| File.exists?(file)}
+    }.flatten.uniq
+    raise "Multiple sources for base name #{path}: #{srcs.join(' ')}" if srcs.length > 1
+    srcs.length == 0? nil : srcs[0]
+  end
 end
 
 #Builder encapsulates the compilation/linking/dependecy checking functionality
@@ -94,32 +109,39 @@ module Builder
     FileUtils.mkdir_p(basedir)
     output = File.open(dc, "w")
     begin
-      tmpfile = Tempfile.open('depcache') do |temp|
-        temp.close
-        RakeFileUtils::sh("#{$COMPILER} #{$COMPILE_FLAGS} #{$MODE_COMPILE_FLAGS[mode]} -M #{src} -o #{temp.path}") do |ok, res|
-          if ok
-            deps = File.read(temp.path)
-            deps.gsub!('\\\n', '') # get rid of \ at the end of lines, and also of the newline
-            puts "Deps: <#{deps}>"
-            deps[/^[^:]*:(.*)$/, 1].split(' ').each do |line|
-              puts "Dep: <#{line}>"
-              line.strip!
-              relpath = Util.make_relative_path(line)
-              output << (relpath || line)
-            end
-            output.close
-            success = true
-          end
-        end
+      #Using backticks as Rake's sh outputs the command. Don't want that here.
+      deps = `#{$COMPILER} #{$COMPILE_FLAGS} #{$MODE_COMPILE_FLAGS[mode]} -M #{src}`
+      raise "Dependency determination failed for #{src}" if $?.to_i != 0
+      # NOTE(vlad): spaces within included filenames are not supported
+      # Get rid of \ at the end of lines, and also of the newline
+      deps.gsub!(/\\\n/, '')
+      # also get rid of <filename>: at the beginning
+      deps[/^[^:]*:(.*)$/, 1].split(' ').each do |line|
+        # Output either a relative path if the file is local, or the original line.
+        output << (Util.make_relative_path(line.strip) || line) << "\n"
       end
+      output.close
+      success = true
     ensure
-      if !success
-        puts "Failed"
-        output.close
-        FileUtils.rm(dc)
-        raise "Dependency determination failed for #{src}"
-      end
+      FileUtils.rm(dc) if !success
     end
+  end
+
+  def Builder.compile_object(src, obj)
+    mode = FileMapper.get_mode(obj)
+    basedir, _ = File.split(obj)
+    FileUtils.mkdir_p(basedir)
+    RakeFileUtils::sh("#{$COMPILER} #{$COMPILE_FLAGS} #{$MODE_COMPILE_FLAGS[mode]} -c #{src} -o #{obj}") do |ok, res|
+      raise "Compilation failed for #{src}" if !ok
+    end
+  end
+  def recursive_invoke_and_collect(mode, top_level_srcs)
+
+  end
+  def Builder.collect_dependencies(mode, top_level_srcs)
+    top_levels_srcs.each do |src|
+      Rake::Task[]
+    end 
   end
 end
 
@@ -128,8 +150,6 @@ rule ".depcache" => ->(dc){
 } do |task|
   src = FileMapper.map_dc_to_cpp(task.name)
   Builder.create_depcache(src, task.name)
-  puts "Attempting to create depcache: #{task.name}"
-  raise "Stop"
 end
 
 rule ".o" => ->(obj){
@@ -138,10 +158,16 @@ rule ".o" => ->(obj){
   dc = FileMapper.map_obj_to_dc(obj)
   [src, dc] + (File.exists?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
-  mode = FileMapper.get_mode(task.name)
   src = FileMapper.map_obj_to_cpp(task.name)
-  puts "#{mode} <#{src}>"
+  Builder.compile_object(src, task.name)
+end
+
+task :clean do
+  FileUtils::rm_rf(".akro/")
+  $MODES.each{|mode| FileUtils::rm_rf("#{mode}/")}
 end
 
 task :default do
+  puts FileMapper.map_header_to_cpp("options.h")
+  puts FileMapper.map_header_to_cpp("/usr/include/assert.h").nil?
 end
