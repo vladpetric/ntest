@@ -1,7 +1,5 @@
-require 'tempfile'
-
 $COMPILER = "g++"
-$COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror"
+$COMPILE_FLAGS = "-std=c++14 -pthread -Wall -msse4"
 $MODE_COMPILE_FLAGS = {
   "debug" => "-g3",
   "release" => "-O3 -g3"
@@ -9,11 +7,12 @@ $MODE_COMPILE_FLAGS = {
 $MODES = $MODE_COMPILE_FLAGS.keys
 
 $LINKER = $COMPILER
-$LINKER_FLAGS = $COMPILE_FLAGS
-$MODE_LINKER_FLAGS = $MODE_COMPILE_FLAGS
+$LINK_FLAGS = $COMPILE_FLAGS
+$MODE_LINK_FLAGS = $MODE_COMPILE_FLAGS
 
 $HEADER_EXTENSIONS = [".h", ".hpp"]
 $CPP_EXTENSIONS = [".c", ".cc", ".cpp", ".cxx", ".c++"]
+$OBJ_EXTENSION = ".o"
 
 module Util
   def Util.make_relative_path(path)
@@ -29,7 +28,6 @@ module Util
   def Util.read_file_list(path)
     File.readlines(path)
   end
-
 end
 
 module FileMapper
@@ -60,18 +58,30 @@ module FileMapper
   # E.g., release/a/b/c.o maps to .akro/release/a/b/c.depcache
   def FileMapper.map_obj_to_dc(path)
     FileMapper.get_mode(path)
-    raise "#{path} is not a .o file" if !path.end_with?('.o')
-    ".akro/#{path[0..-'.o'.length-1]}.depcache"
+    raise "#{path} is not a #{$OBJ_EXTENSION} file" if !path.end_with?($OBJ_EXTENSION)
+    ".akro/#{path[0..-$OBJ_EXTENSION.length-1]}.depcache"
   end
   # Maps object file to its corresponding cpp file, if it exists.
   # E.g., release/a/b/c.o maps to a/b/c{.cpp,.cc,.cxx,.c++}
   def FileMapper.map_obj_to_cpp(path)
-    raise "#{path} is not a .o file" if !path.end_with?('.o')
+    raise "#{path} is not a #{$OBJ_EXTENSION} file" if !path.end_with?($OBJ_EXTENSION)
     file = FileMapper.strip_mode(path)
-    file = file[0..-'.o'.length-1]   
-    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.keep_if{|file| File.exists?(file)}
+    file = file[0..-$OBJ_EXTENSION.length-1]   
+    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.select{|file| File.exists?(file)}
     raise "Multiple sources for base name #{file}: #{srcs.join(' ')}" if srcs.length > 1
     srcs.length == 0? nil : srcs[0]
+  end
+  def FileMapper.map_cpp_to_dc(mode, path)
+    $CPP_EXTENSIONS.map do |ext|
+      return ".akro/#{mode}/#{path[0..-ext.length-1]}.depcache" if path.end_with?(ext)
+    end
+    raise "#{path} is not one of: #{$CPP_EXTENSIONS.join(',')}"
+  end
+  def FileMapper.map_cpp_to_obj(mode, path)
+    $CPP_EXTENSIONS.map do |ext|
+      return "#{mode}/#{path[0..-ext.length-1]}#{$OBJ_EXTENSION}" if path.end_with?(ext)
+    end
+    raise "#{path} is not one of: #{$CPP_EXTENSIONS.join(',')}"
   end
   # Maps depcache file to its corresponding cpp file, which should exist.
   # E.g., .akro/release/a/b/c.o maps to a/b/c{.cpp,.cc,.cxx,.c++}
@@ -79,7 +89,7 @@ module FileMapper
     raise "#{path} is not a .depcache file" if !path.end_with?('.depcache') || !path.start_with?('.akro')
     file = path[/^\.akro\/(.*)\.depcache$/, 1]
     file = FileMapper.strip_mode(file)
-    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.keep_if{|file| File.exists?(file)}
+    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.select{|file| File.exists?(file)}
     raise "Multiple sources for base name #{file}: #{srcs.join(' ')}" if srcs.length > 1
     raise "No sources for base name #{file}" if srcs.length == 0
     srcs[0]
@@ -91,9 +101,11 @@ module FileMapper
     rel_path = Util.make_relative_path(path)
     # file is not local
     return nil if rel_path.nil?
-    srcs = $HEADER_EXTENSIONS.keep_if{|ext| path.end_with?(ext)}.collect{ |ext|
-      base_path = path[0..-ext.length-1]
-      $CPP_EXTENSIONS.map{|cppext| base_path + cppext}.keep_if{|file| File.exists?(file)}
+    #$HEADER_EXTENSIONS.select{|ext| rel_path.end_with?(ext)}.each do |ext|
+    #end
+    srcs = $HEADER_EXTENSIONS.select{|ext| rel_path.end_with?(ext)}.collect{ |ext|
+      base_path = rel_path[0..-ext.length-1]
+      $CPP_EXTENSIONS.map{|cppext| base_path + cppext}.select{|file| File.exists?(file)}
     }.flatten.uniq
     raise "Multiple sources for base name #{path}: #{srcs.join(' ')}" if srcs.length > 1
     srcs.length == 0? nil : srcs[0]
@@ -108,6 +120,7 @@ module Builder
     basedir, _ = File.split(dc)
     FileUtils.mkdir_p(basedir)
     output = File.open(dc, "w")
+    puts "Determining dependencies for #{dc}"
     begin
       #Using backticks as Rake's sh outputs the command. Don't want that here.
       deps = `#{$COMPILER} #{$COMPILE_FLAGS} #{$MODE_COMPILE_FLAGS[mode]} -M #{src}`
@@ -135,13 +148,38 @@ module Builder
       raise "Compilation failed for #{src}" if !ok
     end
   end
-  def recursive_invoke_and_collect(mode, top_level_srcs)
 
+  def Builder.link_binary(objs, bin)
+    mode = FileMapper.get_mode(bin)
+    basedir, _ = File.split(bin)
+    FileUtils.mkdir_p(basedir)
+    RakeFileUtils::sh("#{$LINKER} #{$LINK_FLAGS} #{$MODE_LINK_FLAGS[mode]} #{objs.join(' ')} -o #{bin}") do |ok, res|
+      raise "Linking failed for #{src}" if !ok
+    end
   end
-  def Builder.collect_dependencies(mode, top_level_srcs)
-    top_levels_srcs.each do |src|
-      Rake::Task[]
-    end 
+
+  def Builder.depcache_object_collect(mode, top_level_srcs)
+    all_covered_cpps = Set.new
+    all_objects = []
+    srcs = top_level_srcs
+    while !srcs.empty?
+      new_srcs = [] 
+      dcs = srcs.map{|src| FileMapper.map_cpp_to_dc(mode, src)}
+      dcs.each do |dc|
+        cpp = FileMapper.map_dc_to_cpp(dc)
+        obj = FileMapper.map_cpp_to_obj(mode, cpp)
+        all_objects << obj
+        File.readlines(dc).map{|line| line.strip}.each do |header|
+          new_cpp = FileMapper.map_header_to_cpp(header)
+          if !new_cpp.nil? and !all_covered_cpps.include?(new_cpp)
+            new_srcs << new_cpp
+            all_covered_cpps << new_cpp
+          end
+        end
+      end
+      srcs = new_srcs
+    end
+    all_objects
   end
 end
 
@@ -152,7 +190,7 @@ rule ".depcache" => ->(dc){
   Builder.create_depcache(src, task.name)
 end
 
-rule ".o" => ->(obj){
+rule $OBJ_EXTENSION => ->(obj){
   src = FileMapper.map_obj_to_cpp(obj)
   raise "No source for object file #{obj}" if src.nil?
   dc = FileMapper.map_obj_to_dc(obj)
@@ -162,12 +200,20 @@ rule ".o" => ->(obj){
   Builder.compile_object(src, task.name)
 end
 
+rule ".exe" => ->(binary){
+  obj = binary.gsub(/\.exe$/, $OBJ_EXTENSION)
+  mode = FileMapper.get_mode(binary)
+  cpp = FileMapper.map_obj_to_cpp(obj)
+  raise "No proper #{$CPP_EXTENSIONS.join(',')} file found for #{binary}" if cpp.nil?
+  Builder.depcache_object_collect(mode, [cpp])
+} do |task|
+  Builder.link_binary(task.prerequisites, task.name)
+end
+
 task :clean do
   FileUtils::rm_rf(".akro/")
   $MODES.each{|mode| FileUtils::rm_rf("#{mode}/")}
 end
 
 task :default do
-  puts FileMapper.map_header_to_cpp("options.h")
-  puts FileMapper.map_header_to_cpp("/usr/include/assert.h").nil?
 end
