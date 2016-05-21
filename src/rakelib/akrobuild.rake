@@ -154,7 +154,7 @@ module Builder
     basedir, _ = File.split(bin)
     FileUtils.mkdir_p(basedir)
     RakeFileUtils::sh("#{$LINKER} #{$LINK_FLAGS} #{$MODE_LINK_FLAGS[mode]} #{objs.join(' ')} -o #{bin}") do |ok, res|
-      raise "Linking failed for #{src}" if !ok
+      raise "Linking failed for #{bin}" if !ok
     end
   end
 

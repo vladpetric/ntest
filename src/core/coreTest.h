@@ -1,9 +1,12 @@
+#pragma once
+
 #include "Moves.h"
+#include "QPositionTest.h"
+#include "StoreTest.h"
 
 inline void testCore() {
 	void TestBitBoard();
 	void TestBook();
-	void TestQPosition();
 
 	TestBitBoard();
 	TestBook();
