@@ -24,6 +24,7 @@
 #include "QPosition.h"
 #include "options.h"
 #include "Book.h"
+#include "BookTest.h"
 #include "Store.h"
 
 using namespace std;

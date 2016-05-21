@@ -165,6 +165,7 @@ module Builder
     while !srcs.empty?
       new_srcs = [] 
       dcs = srcs.map{|src| FileMapper.map_cpp_to_dc(mode, src)}
+      dcs.each{|dc| Rake::Task[dc].invoke}
       dcs.each do |dc|
         cpp = FileMapper.map_dc_to_cpp(dc)
         obj = FileMapper.map_cpp_to_obj(mode, cpp)
