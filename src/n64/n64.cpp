@@ -5,7 +5,11 @@
 #include "stdafx.h"
 #include "flips.h"
 #include "solveTest.h"
-
+#include "flipsTest.h"
+#include "utilsTest.h"
+#include "lastFlipCountGenerator.h"
+#include "endgameSearchTest.h"
+#include "hashTest.h"
 #include "n64.h"
 
 void printCompileType() {
@@ -17,10 +21,6 @@ void printCompileType() {
 }
 
 void test() {
-	extern void testFlips();
-	extern void testLastFlipCountGenerator();
-	extern void testUtils();
-	extern void testSearch();
 	extern void testSolve();
 	extern void testHash();
 

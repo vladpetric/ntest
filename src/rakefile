@@ -1,0 +1,3 @@
+$COMPILER_PREFIX = "ccache"
+$COMPILE_FLAGS = "-std=c++14 -pthread -Wall -msse4.2"
+task :default => "release/ntest.exe"

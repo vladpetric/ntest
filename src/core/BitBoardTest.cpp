@@ -41,7 +41,7 @@ static void TestCalcMobilityMatches(const CBitBoard bbTest) {
 }
 
 
-static void TestCalcMobility(const char* board, bool fBlackMove, int pass, int nMovesPlayer, int nMovesOpponent) {
+static void TestCalcMobility(const char* board, bool fBlackMove, int pass, unsigned nMovesPlayer, unsigned nMovesOpponent) {
 	CBitBoard bb;
 	CMoves moves;
 	u4 nMovesPlayerx, nMovesOpponentx;

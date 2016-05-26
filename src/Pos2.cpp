@@ -55,12 +55,12 @@ void Pos2::Initialize(const CBitBoard& m_bb, bool m_fBlackMove) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void Pos2::MakeMoveBB(int square) {
-    int nflipped;
     u64 flip = flips(square, m_bb.mover, ~(m_bb.mover | m_bb.empty)) | mask(square);
     assert ((m_stable & flip) == 0);
     m_bb.empty ^= mask(square);
     m_bb.mover ^= flip;
 
+    /*
     if (flip & m_stable_trigger) {
       auto opponent = ~(m_bb.mover | m_bb.empty);
       
@@ -69,7 +69,7 @@ void Pos2::MakeMoveBB(int square) {
       
       m_stable_mover = bitCount(m_stable & m_bb.mover);
       m_stable_opponent = bitCount(m_stable & opponent);
-    }
+    } */
     if (m_stable) {
         auto stable_swap = m_stable_mover;
         m_stable_mover = m_stable_opponent;
@@ -108,7 +108,6 @@ void Pos2::FPrint(FILE* fp) const {
         black = ~(m_bb.mover | m_bb.empty);
     }
 
-
     nColors[0]=nColors[1]=nColors[2]=0;
     for (row=0; row<N; row++) {
         int16_t rowPattern =
@@ -133,14 +132,6 @@ void Pos2::FPrintStable(FILE* fp) const {
     int row, nColors[3];
 
     FPrintHeader(fp);
-
-    uint64_t black;
-    if (this->BlackMove()) {
-        black = m_bb.mover;
-    } else {
-        black = ~(m_bb.mover | m_bb.empty);
-    }
-
 
     nColors[0]=nColors[1]=nColors[2]=0;
     for (row=0; row<N; row++) {
@@ -168,14 +159,6 @@ void Pos2::FPrintStableNext(FILE* fp) const {
     int row, nColors[3];
 
     FPrintHeader(fp);
-
-    uint64_t black;
-    if (this->BlackMove()) {
-        black = m_bb.mover;
-    } else {
-        black = ~(m_bb.mover | m_bb.empty);
-    }
-
 
     nColors[0]=nColors[1]=nColors[2]=0;
     for (row=0; row<N; row++) {

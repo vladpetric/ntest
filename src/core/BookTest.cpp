@@ -14,11 +14,11 @@ void CBook::TestMyIO() {
 	NegamaxAll();
 
 	std::vector<char> bytes;
-	std::auto_ptr<Store> store = std::auto_ptr<Store>(new MemoryStore(bytes));
-	std::auto_ptr<Writer> out = store->getWriter();
+	std::unique_ptr<Store> store(new MemoryStore(bytes));
+	std::unique_ptr<Writer> out = store->getWriter();
 	WriteVersion2(*out);
 
-	CBook book2(store, s_out);
+	CBook book2(std::move(store), s_out);
 	TEST(*this==book2);
 }
 

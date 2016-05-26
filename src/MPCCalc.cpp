@@ -81,14 +81,13 @@ void CalcPosValues(CPlayerComputer* computer, bool fAppend) {
 	CMoves moves;
 	int i, quantities[60], pass, nCalced, iAppend;
 	CBitBoard bb;
-	time_t tStart;
 
 	if (fAppend) {
 		// figure out what number to start on
 		std::string fn(fnBaseDir);
 		fn+=sPVFile;
 		fpPV=fopen(fn.c_str(), "rb");
-		int result = fseek(fpPV, 0, SEEK_END);
+		fseek(fpPV, 0, SEEK_END);
 		int nFileSize=ftell(fpPV);
 		int nRecordSize=sizeof(bb.mover)+sizeof(bb.empty)+
 			sizeof(mvk.value)+sizeof(pass)+sizeof(mvk.move);
@@ -148,8 +147,6 @@ void CalcPosValues(CPlayerComputer* computer, bool fAppend) {
 
 					// nonterminal position, get value from computer
 					else {
-						tStart=time(0);
-
 						CSearchInfo si=computer->DefaultSearchInfo(pos.BlackMove(), CSearchInfo::kNeedMove+CSearchInfo::kNeedValue,1e6, 0);
 						computer->GetChosen(si, pos, mvk, true);
 						if (pass==1)

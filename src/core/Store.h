@@ -51,12 +51,12 @@ public:
 	//! get a new Writer to write to this Store.
 	//! The caller is responsible for calling delete(writer)
 	//! \throw IOException if an error occurred when opening the file
-	virtual std::auto_ptr<Writer> getWriter() = 0;
+	virtual std::unique_ptr<Writer> getWriter() = 0;
 
 	//! get a new Reader to read to this Store
 	//! The caller is responsible for calling delete(reader)
 	//! \throw IOException if an error occurred when opening the file
-	virtual std::auto_ptr<Reader> getReader() = 0;
+	virtual std::unique_ptr<Reader> getReader() = 0;
 
 	//! String representation of this Store
 	virtual std::string ToString() = 0;
@@ -82,7 +82,7 @@ class FileWriter : public Writer {
 private: 
 	const std::string m_permanentPath;
 	const std::string m_tempPath;
-	std::auto_ptr<FileIo> m_file;
+	std::unique_ptr<FileIo> m_file;
 
 public:
 	FileWriter(const std::string& path);
@@ -110,12 +110,12 @@ public:
 	File(const std::string& path) : m_path(path) {};
 	File(const char* path) : m_path(path) {};
 
-	std::auto_ptr<Writer> getWriter() {
-		return std::auto_ptr<Writer>(new FileWriter(m_path));
+	std::unique_ptr<Writer> getWriter() {
+		return std::unique_ptr<Writer>(new FileWriter(m_path));
 	}
 
-	std::auto_ptr<Reader> getReader() {
-		return std::auto_ptr<Reader>(new FileReader(m_path));
+	std::unique_ptr<Reader> getReader() {
+		return std::unique_ptr<Reader>(new FileReader(m_path));
 	}
 
 	std::string ToString() {
@@ -151,12 +151,12 @@ private:
 public:
 	MemoryStore(std::vector<char>& bytes) : m_bytes(bytes) {};
 
-	std::auto_ptr<Reader> getReader() {
-		return std::auto_ptr<Reader>(new MemoryReader(m_bytes));
+	std::unique_ptr<Reader> getReader() {
+		return std::unique_ptr<Reader>(new MemoryReader(m_bytes));
 	}
 
-	std::auto_ptr<Writer> getWriter() {
-		return std::auto_ptr<Writer>(new MemoryWriter(m_bytes));
+	std::unique_ptr<Writer> getWriter() {
+		return std::unique_ptr<Writer>(new MemoryWriter(m_bytes));
 	}
 
 	std::string ToString() {

@@ -1,4 +1,4 @@
-// Copyright (c) 2014, Vlad Petric
+// Copyright (c) 2014,2016 Vlad Petric
 // All rights reserved.
 //
 // This file is distributed subject to GNU GPL version 3. See the files
@@ -46,18 +46,10 @@ of 7, and thus cannot be handled by the EXTRACT_BITS_U64.
 */
 
 #include <inttypes.h>
-
-// A basic implementation of static assertion, so that we don't rely on boost or c++11
-template<bool>
-class meta_extract_static_assert;
-template<>
-class meta_extract_static_assert<true> {};
-#define EXTRACT_STATIC_ASSERT(COND) typedef meta_extract_static_assert<COND> extraction_static_assert_failed;
-
 template <typename IntT, unsigned int start_bit,
           unsigned int count, unsigned int step>
 class meta_repeated_bit {
-    EXTRACT_STATIC_ASSERT(start_bit + (count - 1) * step <= sizeof(IntT) * 8);
+    static_assert(start_bit + (count - 1) * step <= sizeof(IntT) * 8, "step pattern does not fit 64 bits");
 public:
     static const IntT value =
         meta_repeated_bit<IntT, start_bit + step, count - 1, step>::value
@@ -74,7 +66,7 @@ public:
 
 template <typename IntT, unsigned int start_bit, unsigned int count, unsigned int step>
 inline IntT extractor(IntT input) {
-	EXTRACT_STATIC_ASSERT(count <= step);
+    static_assert(count <= step, "count <= step");
     return ((input & meta_repeated_bit<IntT, start_bit, count, step>::value) *
             meta_repeated_bit<IntT, 0, count, step - 1>::value *
             (IntT(1) << (sizeof(IntT) * 8 - 1 - start_bit - (count - 1) * step))) >> 

@@ -136,7 +136,7 @@ static void testLastFlipCounts(int sq, u64 mover) {
 	mover &= ~mask(sq);
 	const u64 enemy = ~(mover | mask(sq));
 
-	int expected = lastFlipCount(sq, mover);
+	unsigned expected = lastFlipCount(sq, mover);
 	u64 flip = flips(sq, mover, enemy);
 	u64 actual = bitCount(flip);
 	if (actual!=expected) {

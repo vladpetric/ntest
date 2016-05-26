@@ -35,12 +35,10 @@ void testOsGameResult() {
     
     COsGame game2;
     game2.SetDefaultStartPos(8);
-    for (int i=0; i<game.ml.size(); i++) {
-        const COsMoveListItem mli = game.ml[i];
+    for (auto mli: game.ml) {
         game2.Update(mli);
     }
     const COsBoard board = game2.GetPos().board;
-    const int result = board.Result();
     
     assertEquals(-2.0, game2.Result().dResult, 0.001);
     std::ostringstream out;

@@ -1,14 +1,18 @@
-$COMPILER = "g++"
-$COMPILE_FLAGS = "-std=c++14 -pthread -Wall -msse4"
-$MODE_COMPILE_FLAGS = {
+$AKRO_VERBOSE = $VERBOSE.nil? ? false : $VERBOSE
+$AKRO_COMPILER_PREFIX = $COMPILER_PREFIX.nil? ? "" : $COMPILER_PREFIX + " "
+$AKRO_COMPILER = $COMPILER.nil? ? "g++" : $COMPILER
+$AKRO_COMPILE_FLAGS = $COMPILE_FLAGS.nil? ? "-Wall" : $COMPILE_FLAGS
+$AKRO_MODE_COMPILE_FLAGS = $MODE_COMPILE_FLAGS.nil? ? {
   "debug" => "-g3",
   "release" => "-O3 -g3"
-}
-$MODES = $MODE_COMPILE_FLAGS.keys
+} : $MODE_COMPILE_FLAGS
 
-$LINKER = $COMPILER
-$LINK_FLAGS = $COMPILE_FLAGS
-$MODE_LINK_FLAGS = $MODE_COMPILE_FLAGS
+$MODES = $AKRO_MODE_COMPILE_FLAGS.keys
+
+$AKRO_LINKER_PREFIX = $LINKER_PREFIX.nil? ? $AKRO_COMPILER_PREFIX : $LINKER_PREFIX + " "
+$AKRO_LINKER = $LINKER.nil? ? $AKRO_COMPILER : $LINKER
+$AKRO_LINK_FLAGS = $LINK_FLAGS.nil? ? $AKRO_COMPILE_FLAGS : $LINK_FLAGS
+$AKRO_MODE_LINK_FLAGS = $MODE_LINK_FLAGS.nil? ? $AKRO_MODE_COMPILE_FLAGS : $MODE_LINK_FLAGS 
 
 $HEADER_EXTENSIONS = [".h", ".hpp"]
 $CPP_EXTENSIONS = [".c", ".cc", ".cpp", ".cxx", ".c++"]
@@ -24,9 +28,6 @@ module Util
       raise "Relative path #{r} is not relative"
     end
     r
-  end
-  def Util.read_file_list(path)
-    File.readlines(path)
   end
 end
 
@@ -94,7 +95,6 @@ module FileMapper
     raise "No sources for base name #{file}" if srcs.length == 0
     srcs[0]
   end
-
   # Maps header file to its corresponding cpp file, if it exists
   # E.g., a/b/c.h maps to a/b/c.cpp, if a/b/c.cpp exists, otherwise nil
   def FileMapper.map_header_to_cpp(path)
@@ -120,10 +120,10 @@ module Builder
     basedir, _ = File.split(dc)
     FileUtils.mkdir_p(basedir)
     output = File.open(dc, "w")
-    puts "Determining dependencies for #{dc}"
+    puts "Determining dependencies for #{dc}" if $VERBOSE
     begin
       #Using backticks as Rake's sh outputs the command. Don't want that here.
-      deps = `#{$COMPILER} #{$COMPILE_FLAGS} #{$MODE_COMPILE_FLAGS[mode]} -M #{src}`
+      deps = `#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}`
       raise "Dependency determination failed for #{src}" if $?.to_i != 0
       # NOTE(vlad): spaces within included filenames are not supported
       # Get rid of \ at the end of lines, and also of the newline
@@ -144,7 +144,7 @@ module Builder
     mode = FileMapper.get_mode(obj)
     basedir, _ = File.split(obj)
     FileUtils.mkdir_p(basedir)
-    RakeFileUtils::sh("#{$COMPILER} #{$COMPILE_FLAGS} #{$MODE_COMPILE_FLAGS[mode]} -c #{src} -o #{obj}") do |ok, res|
+    RakeFileUtils::sh("#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -c #{src} -o #{obj}") do |ok, res|
       raise "Compilation failed for #{src}" if !ok
     end
   end
@@ -153,7 +153,7 @@ module Builder
     mode = FileMapper.get_mode(bin)
     basedir, _ = File.split(bin)
     FileUtils.mkdir_p(basedir)
-    RakeFileUtils::sh("#{$LINKER} #{$LINK_FLAGS} #{$MODE_LINK_FLAGS[mode]} #{objs.join(' ')} -o #{bin}") do |ok, res|
+    RakeFileUtils::sh("#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} #{objs.join(' ')} -o #{bin}") do |ok, res|
       raise "Linking failed for #{bin}" if !ok
     end
   end
@@ -214,7 +214,4 @@ end
 task :clean do
   FileUtils::rm_rf(".akro/")
   $MODES.each{|mode| FileUtils::rm_rf("#{mode}/")}
-end
-
-task :default do
 end

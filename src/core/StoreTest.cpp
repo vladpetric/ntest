@@ -7,12 +7,12 @@ void TestStore() {
 	MemoryStore store(bytes);
 
 	{
-		std::auto_ptr<Writer> writer = store.getWriter();
+		std::unique_ptr<Writer> writer = store.getWriter();
 		const size_t n = writer->write("foobar", 2, 2);
 		assertEquals(2, n);
 	}
 
-	std::auto_ptr<Reader> reader = store.getReader();
+	auto reader = store.getReader();
 	char buffer[60];
 	buffer[2] = 0;
 	size_t nr = reader->read(buffer, 2, 1);

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "test.h"
 
 /**
 * Generate count and flip functions in the row direction
@@ -202,3 +203,12 @@ void generateFlipFunctions() {
 	std::cout << "// -- end generated code --\n";
 }
 
+void testLastFlipCountGenerator() {
+	assertHexEquals(MaskA1H8, maskD9(0));
+	assertHexEquals(MaskA1H8>>1, maskD9(1));
+	assertHexEquals(1<<7, maskD9(-7));
+
+	assertHexEquals(MaskA8H1, maskD7(7));
+	assertHexEquals(0x1, maskD7(0));
+	assertHexEquals(0x1ULL << 63, maskD7(14));
+}

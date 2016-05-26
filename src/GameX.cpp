@@ -112,9 +112,6 @@ CGameX::CGameX(CComputerDefaults cd) {
 
 	std::string sLine;
 	while (GetLineFromThread(sLine)) {
-		// save value of GameOver so that we know whether to learn the game
-		const bool fGameWasOver=GameOver();
-
 		std::istringstream is(sLine);
 		std::string sCommand;
 		is >> sCommand;

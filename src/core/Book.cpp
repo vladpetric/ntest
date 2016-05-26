@@ -440,17 +440,16 @@ CBook::CBook(): m_fAltered(false), m_nEmptyMin(hSolverStart+1), m_tLastWrite(0),
 //! \post comments and errors will be written to os
 CBook::CBook(const char* filename, std::ostream* os) : m_fAltered(false), m_nEmptyMin(hSolverStart+1), m_tLastWrite(0), m_nHashErr(0), m_os(os) {
     if (filename) {
-        m_store = std::auto_ptr<Store>(new File(filename));
+        m_store.reset(new File(filename));
         Read();
     }
     else {
-        m_store = std::auto_ptr<Store>(NULL);
         m_iBookFormat = 2;
     }
 }
 
-CBook::CBook(std::auto_ptr<Store> store, std::ostream* os) : m_fAltered(false), m_nEmptyMin(hSolverStart+1), m_tLastWrite(0), m_nHashErr(0), m_os(os) {
-    m_store = store;
+CBook::CBook(std::unique_ptr<Store>&& store, std::ostream* os) : m_fAltered(false), m_nEmptyMin(hSolverStart+1), m_tLastWrite(0), m_nHashErr(0), m_os(os) {
+    m_store = std::move(store);
     Read();
 }
 
@@ -471,7 +470,7 @@ void CBook::Read() {
         *m_os << "Loading book " << m_store->ToString() << std::endl;
     }
     try {
-        std::auto_ptr<Reader> in = std::auto_ptr<Reader>(m_store->getReader());
+        std::unique_ptr<Reader> in(m_store->getReader());
         if (in->read(&m_iBookFormat, sizeof(m_iBookFormat), 1)==0) {
             if (m_os) {
                 *m_os << "WARNING: Book " << m_store->ToString() << " is empty\n";
@@ -507,7 +506,7 @@ void CBook::Read() {
             if (m_os) {
                 *m_os << "WARNING: Book " << m_store->ToString() << " is unavailable, book will start out empty and will not be saved. (errno " << errno << ")\n";
             }
-            m_store=std::auto_ptr<Store>(NULL);
+            m_store.reset(nullptr);
         }
     }
     if (m_os) {
@@ -561,7 +560,7 @@ void CBook::Write() {
             *m_os << "Writing book\n";
         }
         try {
-            std::auto_ptr<Writer> out = std::auto_ptr<Writer>(m_store->getWriter());
+            std::unique_ptr<Writer> out(m_store->getWriter());
             switch(s_iBookWriteFormat) {
                 case 2:
                     WriteVersion2(*out);
@@ -629,7 +628,7 @@ void CBook::ReadVersion1(Reader& in) {
 
     for (nRead=0; nRead<nSize && HashRead(&board, sizeof(board), in) && HashRead(&bd, sizeof(bd), in); nRead++) {
         int nEmpty=bitCountInt(board.empty);
-        assert(board.mover & board.empty == 0);
+        assert((board.mover & board.empty) == 0);
         std::cout << "Book " << nRead << " nEmpty " << nEmpty << std::endl;
         if (nEmpty<nEmptyBookMax) {
             entries[nEmpty][board]=bd;
@@ -1889,7 +1888,6 @@ void CBook::ReadStructFile(const char* filename) {
     ifstream in(filename);
     assert(in.good());
 
-    uint64_t mover, empty;
     uint64_t entries = 0;
     uint64_t solved = 0;
     while (in.good() && !in.eof()) {
@@ -1904,7 +1902,7 @@ void CBook::ReadStructFile(const char* filename) {
         int32_t height = stream_read<int32_t>(in);
         int32_t iPrune = stream_read<int32_t>(in);
 
-        auto bookdata_cutoff = stream_read<int32_t>(in);
+        /* auto bookdata_cutoff = */ stream_read<int32_t>(in);
         bookdata.nGames[0] = stream_read<uint32_t>(in);
         bookdata.nGames[1] = stream_read<uint32_t>(in);
         int16_t black = stream_read<int16_t>(in); // bookdata.values.vBlack
@@ -1916,7 +1914,7 @@ void CBook::ReadStructFile(const char* filename) {
             ++solved;
         }
         bool book_fRoot = stream_read<bool>(in);
-        bool fKnownSolve = stream_read<bool>(in);
+        /*bool fKnownSolve = */ stream_read<bool>(in);
         bool fWLD = stream_read<bool>(in);
         unsigned empties = bitCount(cb.empty);
         CHeightInfoX hi(height, iPrune, fWLD, empties);
@@ -1930,6 +1928,6 @@ void CBook::ReadStructFile(const char* filename) {
         ++entries;
     }
     std::cout << "read: " << entries << " solved: " << solved << std::endl;
-    m_store = std::auto_ptr<Store>(new File("converted.JA_s26.book"));
+    m_store.reset(new File("converted.JA_s26.book"));
     Write();
 }

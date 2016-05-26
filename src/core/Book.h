@@ -10,6 +10,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <iostream>
 #include <vector>
@@ -183,7 +184,7 @@ class CBook {
 public:
     CBook();
     CBook(const char* filename, std::ostream* os=&std::cerr);
-    CBook(std::auto_ptr<Store> store, std::ostream* os = &std::cerr);
+    CBook(std::unique_ptr<Store>&& store, std::ostream* os = &std::cerr);
     ~CBook();
 
     //! \name Store info in book
@@ -268,7 +269,7 @@ protected:
 
 private:
     int m_nEmptyMin;
-    std::auto_ptr<Store> m_store; //!< location to read/write book, or NULL if the book is not stored
+    std::unique_ptr<Store> m_store; //!< location to read/write book, or NULL if the book is not stored
     CBoni m_boni;
     time_t m_tLastWrite;
     int m_nHashErr;

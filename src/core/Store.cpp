@@ -29,8 +29,8 @@ FileIo::~FileIo() {
 static std::string TempPath(const std::string& path) {
 	// generate temporary file name for writing
 	std::string tempDir;
-	size_t loc=path.find_last_of("\\/");
-	if (loc==-1) {
+	size_t loc = path.find_last_of("\\/");
+	if (loc == std::string::npos) {
 		tempDir=".";
 	}
 	else {
