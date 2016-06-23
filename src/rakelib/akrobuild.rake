@@ -1,4 +1,4 @@
-$AKRO_VERBOSE = $VERBOSE.nil? ? false : $VERBOSE
+$AKRO_VERBOSE = $VERBOSE_BUILD.nil? ? false : $VERBOSE_BUILD
 $AKRO_COMPILER_PREFIX = $COMPILER_PREFIX.nil? ? "" : $COMPILER_PREFIX + " "
 $AKRO_COMPILER = $COMPILER.nil? ? "g++" : $COMPILER
 $AKRO_COMPILE_FLAGS = $COMPILE_FLAGS.nil? ? "-Wall" : $COMPILE_FLAGS
@@ -68,7 +68,7 @@ module FileMapper
     raise "#{path} is not a #{$OBJ_EXTENSION} file" if !path.end_with?($OBJ_EXTENSION)
     file = FileMapper.strip_mode(path)
     file = file[0..-$OBJ_EXTENSION.length-1]   
-    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.select{|file| File.exists?(file)}
+    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.select{|fname| File.exist?(fname)}
     raise "Multiple sources for base name #{file}: #{srcs.join(' ')}" if srcs.length > 1
     srcs.length == 0? nil : srcs[0]
   end
@@ -90,7 +90,7 @@ module FileMapper
     raise "#{path} is not a .depcache file" if !path.end_with?('.depcache') || !path.start_with?('.akro')
     file = path[/^\.akro\/(.*)\.depcache$/, 1]
     file = FileMapper.strip_mode(file)
-    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.select{|file| File.exists?(file)}
+    srcs = $CPP_EXTENSIONS.map{|ext| file + ext}.select{|fname| File.exist?(fname)}
     raise "Multiple sources for base name #{file}: #{srcs.join(' ')}" if srcs.length > 1
     raise "No sources for base name #{file}" if srcs.length == 0
     srcs[0]
@@ -105,7 +105,7 @@ module FileMapper
     #end
     srcs = $HEADER_EXTENSIONS.select{|ext| rel_path.end_with?(ext)}.collect{ |ext|
       base_path = rel_path[0..-ext.length-1]
-      $CPP_EXTENSIONS.map{|cppext| base_path + cppext}.select{|file| File.exists?(file)}
+      $CPP_EXTENSIONS.map{|cppext| base_path + cppext}.select{|file| File.exist?(file)}
     }.flatten.uniq
     raise "Multiple sources for base name #{path}: #{srcs.join(' ')}" if srcs.length > 1
     srcs.length == 0? nil : srcs[0]
@@ -120,9 +120,10 @@ module Builder
     basedir, _ = File.split(dc)
     FileUtils.mkdir_p(basedir)
     output = File.open(dc, "w")
-    puts "Determining dependencies for #{dc}" if $VERBOSE
+    puts "Determining dependencies for #{dc}" if $AKRO_VERBOSE
     begin
       #Using backticks as Rake's sh outputs the command. Don't want that here.
+      puts "#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}" if $AKRO_VERBOSE
       deps = `#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}`
       raise "Dependency determination failed for #{src}" if $?.to_i != 0
       # NOTE(vlad): spaces within included filenames are not supported
@@ -185,7 +186,7 @@ module Builder
 end
 
 rule ".depcache" => ->(dc){
-  [FileMapper.map_dc_to_cpp(dc)] + (File.exists?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
+  [FileMapper.map_dc_to_cpp(dc)] + (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
   src = FileMapper.map_dc_to_cpp(task.name)
   Builder.create_depcache(src, task.name)
@@ -195,7 +196,7 @@ rule $OBJ_EXTENSION => ->(obj){
   src = FileMapper.map_obj_to_cpp(obj)
   raise "No source for object file #{obj}" if src.nil?
   dc = FileMapper.map_obj_to_dc(obj)
-  [src, dc] + (File.exists?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
+  [src, dc] + (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
   src = FileMapper.map_obj_to_cpp(task.name)
   Builder.compile_object(src, task.name)

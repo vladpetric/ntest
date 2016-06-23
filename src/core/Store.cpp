@@ -42,8 +42,8 @@ static std::string TempPath(const std::string& path) {
 	fnTemp[MAX_PATH]=0;
 	return std::string(fnTemp);
 #else
-    char buff[] = "/tmp/tempbkXXXXX";
-    return std::string(tmpnam(buff));
+  char buff[] = "/tmp/tempbkXXXXX";
+  return std::string(tmpnam(buff));
 #endif
 
 }

@@ -34,10 +34,6 @@ public:
 	// info
 	const CBitBoard& Board() const;
 
-	// moves
-	CMove BestMove() const;
-	void BestMove(CMove newBestMove);
-
 	// load info from cache. Returns TRUE if we can return value immediately
 	bool Load(int height, int iPrune, int nEmpty, CValue alpha, CValue beta, CMove& bestMove,
 		int& iFastestFirst, CValue& searchAlpha, CValue& searchBeta, CValue& value);
@@ -67,8 +63,6 @@ private:
 
 inline CCacheData::CCacheData() {};
 inline CCacheData::CCacheData(CValue anLBound, CValue aUBound, int aHeight,int aPrune,int anEmpty) { lBound=anLBound; uBound=aUBound; height=aHeight; iPrune=aPrune; nEmpty=anEmpty; }
-inline CMove CCacheData::BestMove() const {return bestMove;}
-inline void CCacheData::BestMove(CMove newBestMove) {bestMove=newBestMove;}
 inline bool CCacheData::operator<(const CCacheData& b) const { return board<b.board;}
 inline std::ostream& operator<<(std::ostream& os, const CCacheData& cd) { return cd.OutData(os);}
 inline void CCacheData::SetStale(bool fNewStale) { fStale=fNewStale; }
@@ -93,7 +87,7 @@ public:
 	void PrintStats() const;
 	void ClearStats();
 	void Clear();
-	void Verify();
+	//void Verify();
 
 	void Prefetch(u64 hash) {
 		hash &= nBuckets - 1;
