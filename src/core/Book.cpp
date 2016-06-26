@@ -350,15 +350,12 @@ void HashInit() {
 void HashLong(u4 x) {
     switch(hash_n++) {
     case 0:
-        fprintf(stdout, "HashLong 0 %x\n", x);
         hash_a+=x;
         break;
     case 1:
-        fprintf(stdout, "HashLong 1 %x\n", x);
         hash_b+=x;
         break;
     case 2:
-        fprintf(stdout, "HashLong 2 %x\n", x);
         hash_c+=x;
         bobMix(hash_a,hash_b,hash_c);
         hash_n=0;
@@ -743,9 +740,7 @@ void CBook::WriteTree2(Writer& out, const CMinimalReflection& mr, CBookData& bd)
             CBookData& bd=i->second;
             if (!bd.GetWritten()) {
                 char sq=move.Square();
-                fprintf(stdout, "WriteTree2 square %d\n", int(sq));
                 HashWrite(&sq, 1, out);
-                fprintf(stdout, "WriteTree2 square %d done\n", int(sq));
                 WriteTree2(out, mr, bd);
             }
         }
@@ -787,9 +782,7 @@ void CBook::WriteVersion2(Writer& out) {
                     // write the main tree
                     const CMinimalReflection mr(i->first);
                     assert(!mr.IsImpossible());
-                    fprintf(stdout, "Writing bitboard\n");
                     HashWrite(&mr, sizeof(CBitBoard), out);
-                    fprintf(stdout, "Writing bitboard done\n");
                     WriteTree2(out, mr, i->second);
                 }
             }
@@ -842,7 +835,7 @@ void CBook::ReadTree2(Reader& in, const CMinimalReflection& mr) {
 
     // read in subtrees.
     char c;
-    while (HashRead(&c, 1, in) && c!=-1) {
+    while (HashRead(&c, 1, in) && c!=static_cast<char>(-1)) {
         assert(!pos.BitBoard().IsImpossible());
         CMove move(c);
         CQPosition subpos(pos);
@@ -862,13 +855,10 @@ void CBook::ReadVersion2(Reader& in) {
 
     // repeatedly read in main trees
     CBitBoard bb;
-    fprintf(stdout, "Start reading tree\n");
     while (Size()<nSize && HashRead(&bb, sizeof(bb), in)==1) {
         assert(!bb.IsImpossible());
-        fprintf(stdout, "Done reading bb\n");
         ReadTree2(in, bb);
     }
-    fprintf(stdout, "Done reading tree\n");
 
     // compare size to the size data element written at the beginning of the file
     if (nSize!=Size()) {

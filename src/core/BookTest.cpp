@@ -17,7 +17,6 @@ void CBook::TestMyIO() {
 	std::unique_ptr<Store> store(new MemoryStore(bytes));
 	std::unique_ptr<Writer> out = store->getWriter();
 	WriteVersion2(*out);
-    fprintf(stdout, "Done Writing\n");
 	CBook book2(std::move(store), s_out);
 	TEST(*this==book2);
 }

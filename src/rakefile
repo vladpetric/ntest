@@ -1,4 +1,4 @@
 $VERBOSE_BUILD = true
 $COMPILER_PREFIX = "ccache"
-$COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mneon-for-64bits -mfpu=neon -funsafe-math-optimizations"
+$COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mfpu=neon -funsafe-math-optimizations"
 task :default => "release/ntest.exe"
