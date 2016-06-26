@@ -835,7 +835,7 @@ void CBook::ReadTree2(Reader& in, const CMinimalReflection& mr) {
 
     // read in subtrees.
     char c;
-    while (HashRead(&c, 1, in) && c!=-1) {
+    while (HashRead(&c, 1, in) && c!=static_cast<char>(-1)) {
         assert(!pos.BitBoard().IsImpossible());
         CMove move(c);
         CQPosition subpos(pos);
