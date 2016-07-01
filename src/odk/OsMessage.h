@@ -87,7 +87,7 @@ public:
 	virtual void Handle();
 	void In(std::istream& is);
 
-	int n;
+	unsigned n;
 	std::string sLogin;
 	std::vector<COsHistoryItem> his;
 };
@@ -115,7 +115,7 @@ public:
 	virtual void Handle();
 	void In(std::istream& is);
 
-	int n1, n2;
+	unsigned n1, n2;
 	std::vector<COsMatch> matches;
 };
 
@@ -138,7 +138,7 @@ public:
 	void In(std::istream& is);
 
 	COsRating rating;
-	int n;	// what is this?
+	unsigned n;	// what is this?
 	std::vector<COsRankData> rds;
 };
 
@@ -189,7 +189,7 @@ public:
 	virtual void Handle();
 	void In(std::istream& is);
 
-	int nStored;
+	unsigned nStored;
 	std::string sLogin;
 	std::vector<COsStoredMatch> sms;
 };

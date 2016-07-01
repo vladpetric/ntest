@@ -4,7 +4,7 @@
 #include "types.h"
 
 #include "GGSMessage.h"
-#include <strstream>
+#include <sstream>
 #include <iomanip>
 #include "ggsstream.h"
 
@@ -79,7 +79,7 @@ void CMsgGGSFinger::In(istream& is) {
 		if (sLine.find(':')==string::npos)
 			break;
 
-		istrstream isLine(sLine.c_str());
+		istringstream isLine(sLine);
 
 		// get key and strip terminal spaces
 		getline(isLine, sKey, ':');

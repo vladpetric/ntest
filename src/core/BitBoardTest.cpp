@@ -1,4 +1,5 @@
 #include <cassert>
+#include <fstream>
 
 #include "../n64/test.h"
 #include "BitBoard.h"

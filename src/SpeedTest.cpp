@@ -216,7 +216,6 @@ void FFOTest() {
 	CNodeStats start, end, start1, end1;
 	CQPosition pos;
 	CHeightInfo hi(0,0,false);
-	CCalcParams* pcp=new CCalcParamsFixedNEmpty(hi);
 	CMVK mvk;
 	char buf[NN+1], c;
 	string s;
@@ -268,19 +267,17 @@ void FFOTest() {
 }
 
 void TestMoveSpeed(int hSolveFrom, int nGames, char* sMode) {
-	CHeightInfo hi(hSolveFrom-hSolverStart, 0,true);
-	if (false) {
+    CHeightInfo hi(hSolveFrom-hSolverStart, 0,true);
+#ifdef GET_RID
 		//FFOTest();
 		// if the mode contains an e it is endgame only
 		bool fEndgameOnly=sMode && strchr(sMode,'e');
 		//for (int i=10; i<=30; i++)
 		//	TestMidgameSpeed(i,nGames,fEndgameOnly);
 		TestMidgameSpeed(hSolveFrom, CHeightInfo(hSolveFrom,0,true), nGames, (sMode && strchr(sMode,'e'))?kOnlyFinalRound:0);
-	}
-	else {
+#endif
 		const int hEndgame=22;
 		TestMidgameSpeed(hEndgame, CHeightInfo(hEndgame-hSolverStart,0,true), 12, kPrintTestHeader);
 		const int hMidgame=20;
 		TestMidgameSpeed(35, CHeightInfo(hMidgame,4,false), 12, kPrintTestHeader);
-	}
 }	

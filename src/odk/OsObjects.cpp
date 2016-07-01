@@ -4,7 +4,6 @@
 #include "types.h"
 
 #include "OsObjects.h"
-#include <strstream>
 #include <iomanip>
 #include "time.h"
 #include <ctype.h>
@@ -877,12 +876,10 @@ void COsDateTime::In(istream& is) {
 }
 
 string COsDateTime::Text() const {
-	ostrstream os;
+	ostringstream os;
 	os << setw(4) << year << "-" << sMonth << "-" << day << " " << sTime << '\0';
-	string result(os.str());
-	os.rdbuf()->freeze(0);
 
-	return result;
+	return os.str();
 }
 
 /////////////////////////////////////
@@ -964,7 +961,7 @@ void COsGame::In(istream& is) {
 				break;
 			getline(is, sToken, '[');
 			getline(is, sData, ']');
-			istrstream is(sData.c_str());
+			istringstream is(sData);
 
 			if (sToken=="GM")
 				assert(sData=="Othello");
@@ -1127,7 +1124,7 @@ istream& COsGame::InIOS(istream& is) {
 		// read move code. move code 0 means game is over
 		while ((is >> iosmove) && iosmove) {
 			// positive moves are black, negative are white
-			assert(pos.board.fBlackMove==iosmove>0);
+			assert(pos.board.fBlackMove==(iosmove>0));
 
 			mli.mv.SetIOS(iosmove);
 			Update(mli);
@@ -1355,7 +1352,7 @@ void COsRankData::In(istream& is) {
 
 	getline(is, sLine);
 	if (!sLine.empty()) {
-		istrstream isLine(sLine.c_str());
+		istringstream isLine(sLine);
 
 		isLine  >> iRank >> sLogin;
 		isLine >> rd;
@@ -1481,7 +1478,7 @@ void COsWhoItem::In(istream& isAll) {
 	getline(isAll, sLine);
 
 	if (!sLine.empty()) {
-		istrstream is(sLine.c_str());
+		istringstream is(sLine);
 		string s;
 		char c;
 

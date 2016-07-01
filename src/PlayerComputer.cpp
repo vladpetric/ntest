@@ -25,7 +25,7 @@ using namespace std;
 ////////////////////////////////////////
 
 CComputerDefaults::CComputerDefaults() : sCalcParams("s26"), cEval('J'), cCoeffSet('A')
-, iPruneEndgame(5), iPruneMidgame(4), booklevel(kNegamaxBook), iEdmund(1) {
+, iPruneEndgame(5), iPruneMidgame(4), iEdmund(1), booklevel(kNegamaxBook) {
 	vContempts[0]=0;
 	vContempts[1]=0;
 	nRandShifts[0]=nRandShifts[1]=0;
@@ -110,9 +110,11 @@ CPlayerComputer::CPlayerComputer(const CComputerDefaults& acd) {
 
 	// Set up MPC widths
 	if (mpcs) {
+    /*
 		int iPruneMax=cd.iPruneMidgame;
 		if (cd.iPruneEndgame>cd.iPruneMidgame)
 			iPruneMax=cd.iPruneEndgame;
+    */
 	}
 	else
 		cd.iPruneMidgame=cd.iPruneEndgame=0;
@@ -296,8 +298,6 @@ CSearchInfo CPlayerComputer::DefaultSearchInfo(bool fBlackMove, u4 fNeeds, doubl
 }
 
 void CPlayerComputer::GetChosen(const CSearchInfo& si, const CQPosition& pos, CMVK& mvk, bool fUseBook) {
-	const int hSolve = pos.NEmpty()-hSolverStart;
-
 	SetParameters(pos, fUseBook, si.iCache);
 	assert((mpcs==NULL) || cd.iPruneMidgame<=::mpcs->NPrunes());
 
@@ -436,7 +436,6 @@ void CPlayerComputer::PrintAnalysis(const COsGame& game) {
 	CQPosition pos(game, 0);
 	CMoves moves;
 	CMove move;
-	double totalTime=0;
 	CMVK chosen;
 	CNodeStats start, end;
 

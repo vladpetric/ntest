@@ -47,6 +47,7 @@ static uint64_t fill_right(uint64_t g, uint64_t p) {
     g |= p & (g >> 4);
     return g;
 }
+/*
 static uint64_t fill_left(uint64_t g, uint64_t p) {
     p &= ~HFile;
     g |= p & (g << 1);
@@ -63,7 +64,7 @@ static uint64_t fill_up(uint64_t g, uint64_t p) {
     p &= (p << 16);
     g |= p & (g << 32);
     return g;
-}
+}*/
 static uint64_t fill_up_left(uint64_t g, uint64_t p) {
     p &= ~HFile;
     g |= p & (g << 9);
@@ -154,7 +155,7 @@ uint64_t stable_discs(uint64_t mover, uint64_t enemy, uint64_t empty,
         uldr_stable |= ((stable<<9)&ul_of) | ((stable>>9)&dr_of);
         urdl_stable |= ((stable<<7)&ur_of) | ((stable>>7)&dl_of);
 
-        long new_stable = stable | (lr_stable & ud_stable & uldr_stable & urdl_stable);
+        uint64_t new_stable = stable | (lr_stable & ud_stable & uldr_stable & urdl_stable);
         if (new_stable == stable) {
             break;
         }
