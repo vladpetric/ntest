@@ -1,5 +1,5 @@
 // Copyright Chris Welty
-//	All Rights Reserved
+// All Rights Reserved
 // This file is distributed subject to GNU GPL version 3. See the files
 // GPLv3.txt and License.txt in the instructions subdirectory for details.
 
@@ -30,6 +30,7 @@ u2 ORIDReverse(u2 config, int size);
 u4 row2To2x5[6561],row1To2x5[6561],row2ToXX[6561];
 u4 row1ToTriangle[6561],row2ToTriangle[6561],row3ToTriangle[6561],row4ToTriangle[6561];
 u4 configs2x5To2x4[9*6561];
+u4 fourRowsToTriangle[4 * 6561];
 
 // pattern J info
 int coeffStartsJ[nMapsJ];
@@ -215,21 +216,25 @@ void InitTranslators() {
         value2=trits[7]*3*6561;
         value=(value1<<16) + value2;
         row4ToTriangle[config]=value;
+        fourRowsToTriangle[3 * 6561 + config] = value;
         // row 3
         value1=trits[0]*6561+trits[1]*729;
         value2=trits[7]*6561+trits[6]*729;
         value=(value1<<16) + value2;
         row3ToTriangle[config]=value;
+        fourRowsToTriangle[2 * 6561 + config] = value;
         // row 2
         value1=trits[0]*3*729+trits[1]*3+trits[2]*3*81;
         value2=trits[7]*3*729+trits[6]*3+trits[5]*3*81;
         value=(value1<<16) + value2;
         row2ToTriangle[config]=value;
+        fourRowsToTriangle[6561 + config] = value;
         // row 1
         value1=trits[0]+trits[1]*81+trits[2]*27+trits[3]*9;
         value2=trits[7]+trits[6]*81+trits[5]*27+trits[4]*9;
         value=(value1<<16) + value2;
         row1ToTriangle[config]=value;
+        fourRowsToTriangle[config] = value;
     }
 }
 

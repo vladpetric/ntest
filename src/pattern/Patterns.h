@@ -133,6 +133,7 @@ u4 TritsToRConfig(int* trits, int length);
 extern u4 row2To2x5[6561],row1To2x5[6561],row2ToXX[6561];
 extern u4 row1ToTriangle[6561],row2ToTriangle[6561],row3ToTriangle[6561],row4ToTriangle[6561];
 extern u4 configs2x5To2x4[9*6561];
+extern u4	fourRowsToTriangle[4 * 6561];
 
 inline u2 CMap::NIDs() const {
 	switch(idType) {

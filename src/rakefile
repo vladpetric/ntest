@@ -1,4 +1,4 @@
 $VERBOSE_BUILD = true
 $COMPILER_PREFIX = "ccache"
-$COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I."
+$COMPILE_FLAGS = "-std=c++14 -pthread -Wall  -mavx2 -mbmi2 -I."
 task :default => "release/ntest.exe"

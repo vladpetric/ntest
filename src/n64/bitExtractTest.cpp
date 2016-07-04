@@ -86,6 +86,8 @@ void TestBitGather() {
     TemplateTestBitGatherAndConvert<1, 4, 8>();
     TemplateTestBitGatherAndConvert<1, 4, 9>();
 
+    TemplateTestBitGatherAndConvert<2, 3, 7>();
+
     TemplateTestBitGatherAndConvert<2, 4, 7>();
     TemplateTestBitGatherAndConvert<2, 4, 8>();
     TemplateTestBitGatherAndConvert<2, 4, 9>();
