@@ -465,10 +465,10 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     static constexpr __m256i factor_p3 = (__m256i)(__v8su) {
       0, 81, 0, 81, 0, 27, 0, 27};
 
-    __m256i mover_lo_4x = _mm256_cvtepu32_epi64(_mm_broadcastd_epi32(_mm_cvtsi32_si128(static_cast<uint32_t>(mover))));
-    __m256i mover_hi_4x = _mm256_cvtepu32_epi64(_mm_broadcastd_epi32(_mm_cvtsi32_si128(static_cast<uint32_t>(mover >> 32))));
-    __m256i empty_lo_4x = _mm256_cvtepu32_epi64(_mm_broadcastd_epi32(_mm_cvtsi32_si128(static_cast<uint32_t>(empty))));
-    __m256i empty_hi_4x = _mm256_cvtepu32_epi64(_mm_broadcastd_epi32(_mm_cvtsi32_si128(static_cast<uint32_t>(empty >> 32))));
+    __m256i mover_lo_4x = _mm256_set_epi64x(static_cast<long long int>(mover), static_cast<long long int>(mover), static_cast<long long int>(mover), static_cast<long long int>(mover));
+    __m256i mover_hi_4x = _mm256_set_epi64x(static_cast<long long int>(mover >> 32), static_cast<long long int>(mover >> 32), static_cast<long long int>(mover >> 32), static_cast<long long int>(mover >> 32));
+    __m256i empty_lo_4x = _mm256_set_epi64x(static_cast<long long int>(empty), static_cast<long long int>(empty), static_cast<long long int>(empty), static_cast<long long int>(empty));
+    __m256i empty_hi_4x = _mm256_set_epi64x(static_cast<long long int>(empty >> 32), static_cast<long long int>(empty >> 32), static_cast<long long int>(empty >> 32), static_cast<long long int>(empty >> 32));
 
     __m256i mover_lo_base3 = _mm256_and_si256(mask, _mm256_mul_epu32(const_diag7_multipliers_4x_lo, _mm256_and_si256(mover_lo_4x, const_diag7_masks_4x_lo)));
     __m256i mover_hi_base3 = _mm256_mullo_epi32(factor_p3, _mm256_and_si256(mask, _mm256_mul_epu32(const_diag7_multipliers_4x_hi, _mm256_and_si256(mover_hi_4x, const_diag7_masks_4x_hi))));
