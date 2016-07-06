@@ -429,8 +429,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
      2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
 
     const TCoeff* __restrict__ const pD5 = pcoeffs+offsetJD5;
-    const TCoeff* __restrict__ const pD6 = pcoeffs+offsetJD6;
-    const TCoeff* __restrict__ const pD7 = pcoeffs+offsetJD7;
     const TCoeff* __restrict__ const pD8 = pcoeffs+offsetJD8;
 
     // Diagonals of type A run NWSE, with a bit step of 9.
@@ -445,10 +443,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40,
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
     };
-    static constexpr __m256i const_u32_lsbyte_mask = (__m256i)(__v8su) {
-      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-    };
-
     static constexpr __m256i const_diag76_masks_lo = (__m256i)(__v8su) {
       // D7
       meta_u32_extractor<1, 4, 9>::and_mask, meta_u32_extractor<6, 4, 7>::and_mask,
@@ -552,52 +546,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
 
     static constexpr __m256i const_d67_offsets_256 = (__m256i)(__v8su){offsetJD7, offsetJD7, offsetJD7, offsetJD7, offsetJD6, offsetJD6, offsetJD6, offsetJD6};
     __m256i diag_results = _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(d67_pattern, const_d67_offsets_256), 4);
-    static constexpr __m256i const_diag7_masks_4x_lo = (__m256i)(__v8su) {
-      meta_repeated_bit<uint32_t, 1, 4, 9>::value, 0,
-      meta_repeated_bit<uint32_t, 6, 4, 7>::value, 0,
-      meta_repeated_bit<uint32_t, 8, 3, 9>::value, 0,
-      meta_repeated_bit<uint32_t, 15, 3, 7>::value, 0};
-    static constexpr __m256i const_diag7_multipliers_4x_lo = (__m256i)(__v8su) {
-      meta_base3_u32_hilo<1, 4, 9>::multiplier, 0,
-      meta_base3_u32_hilo<6, 4, 7>::multiplier, 0,
-      meta_base3_u32_hilo<8, 3, 9>::multiplier, 0,
-      meta_base3_u32_hilo<15, 3, 7>::multiplier, 0};
-    static constexpr __m256i const_diag7_masks_4x_hi = (__m256i)(__v8su) {
-      meta_repeated_bit<uint32_t, 5, 3, 9>::value, 0,
-      meta_repeated_bit<uint32_t, 2, 3, 7>::value, 0,
-      meta_repeated_bit<uint32_t, 3, 4, 9>::value, 0,
-      meta_repeated_bit<uint32_t, 4, 4, 7>::value, 0};
-    static constexpr __m256i const_diag7_multipliers_4x_hi = (__m256i)(__v8su) {
-      meta_base3_u32_hilo<5, 3, 9>::multiplier, 0,
-      meta_base3_u32_hilo<2, 3, 7>::multiplier, 0,
-      meta_base3_u32_hilo<3, 4, 9>::multiplier, 0,
-      meta_base3_u32_hilo<4, 4, 7>::multiplier, 0};
-    static constexpr __m256i mask = (__m256i)(__v8su) {
-      0, (1 << 9) - 1, 0, (1 << 7) - 1, 0, (1 << 9) - 1, 0, (1 << 7) - 1};
-    static constexpr __m256i factor_p3 = (__m256i)(__v8su) {
-      0, 81, 0, 81, 0, 27, 0, 27};
-
-    __m256i mover_lo_4x = _mm256_set_epi64x(static_cast<long long int>(mover), static_cast<long long int>(mover), static_cast<long long int>(mover), static_cast<long long int>(mover));
-    __m256i mover_hi_4x = _mm256_set_epi64x(static_cast<long long int>(mover >> 32), static_cast<long long int>(mover >> 32), static_cast<long long int>(mover >> 32), static_cast<long long int>(mover >> 32));
-    __m256i empty_lo_4x = _mm256_set_epi64x(static_cast<long long int>(empty), static_cast<long long int>(empty), static_cast<long long int>(empty), static_cast<long long int>(empty));
-    __m256i empty_hi_4x = _mm256_set_epi64x(static_cast<long long int>(empty >> 32), static_cast<long long int>(empty >> 32), static_cast<long long int>(empty >> 32), static_cast<long long int>(empty >> 32));
-
-    __m256i mover_lo_base3 = _mm256_and_si256(mask, _mm256_mul_epu32(const_diag7_multipliers_4x_lo, _mm256_and_si256(mover_lo_4x, const_diag7_masks_4x_lo)));
-    __m256i mover_hi_base3 = _mm256_mullo_epi32(factor_p3, _mm256_and_si256(mask, _mm256_mul_epu32(const_diag7_multipliers_4x_hi, _mm256_and_si256(mover_hi_4x, const_diag7_masks_4x_hi))));
-    __m256i mover_diag_base3 = _mm256_add_epi32(mover_hi_base3, mover_lo_base3);
-    __m256i empty_lo_base3 = _mm256_and_si256(mask, _mm256_mul_epu32(const_diag7_multipliers_4x_lo, _mm256_and_si256(empty_lo_4x, const_diag7_masks_4x_lo)));
-    __m256i empty_hi_base3 = _mm256_mullo_epi32(factor_p3, _mm256_and_si256(mask, _mm256_mul_epu32(const_diag7_multipliers_4x_hi, _mm256_and_si256(empty_hi_4x, const_diag7_masks_4x_hi))));
-    __m256i empty_diag_base3 = _mm256_add_epi32(empty_hi_base3, empty_lo_base3);
-
-    __m256i pattern_7_diag = _mm256_add_epi32(_mm256_srli_epi64(mover_diag_base3, 31), _mm256_srli_epi64(empty_diag_base3, 32));
-    __m256i value_7_diag = _mm256_cvtepu32_epi64(_mm256_i64gather_epi32(reinterpret_cast<const int *>(pD7), pattern_7_diag, 4));
-    assert(_mm256_extract_epi32(diag_results, 0) == _mm256_extract_epi32(value_7_diag, 0));
-    assert(_mm256_extract_epi32(diag_results, 1) == _mm256_extract_epi32(value_7_diag, 2));
-    assert(_mm256_extract_epi32(diag_results, 2) == _mm256_extract_epi32(value_7_diag, 4));
-    assert(_mm256_extract_epi32(diag_results, 3) == _mm256_extract_epi32(value_7_diag, 6));
-    // Diag6 B1 and B2 
-    value += pD6[BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
-    value += pD6[BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
 
     // The 0x2030486ca2f300 multiplier will perform the bit gather +
     // base 3 conversion for the 6-long diagonal starting on bit 2, with
@@ -606,15 +554,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     // However, it is cheaper to reduce 6A2, 5A1 and 5A2 to 6A1 via a
     // shift, rather than load a different constant every single time.
     // The compiler reuses the constants quite effectively.
-
-    uint64_t Diag6A1 =
-        (((empty & meta_repeated_bit<uint64_t, 2, 6, 9>::value) * 0x2030486ca2f300) >> 55) +
-        2 * (((mover & meta_repeated_bit<uint64_t, 2, 6, 9>::value) * 0x2030486ca2f300) >> 55);
-    value += pD6[Diag6A1];
-    uint64_t Diag6A2 =
-        ((((empty & meta_repeated_bit<uint64_t, 16, 6, 9>::value) >> 14) * 0x2030486ca2f300) >> 55) +
-        2 * ((((mover & meta_repeated_bit<uint64_t, 16, 6, 9>::value) >> 14) * 0x2030486ca2f300) >> 55);
-    value += pD6[Diag6A2];
 
     uint64_t Diag5A1 =
          ((((empty & meta_repeated_bit<uint64_t, 3, 5, 9>::value) >> 1) * 0x2030486ca2f300) >> 55) +
@@ -637,10 +576,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
          2 * ((((mover & meta_repeated_bit<uint64_t, 31, 5, 7>::value) >> 27) * 0x20c49ba2000000) >> 57);
     value += pD5[Diag5B2];
 
-    assert(pD6[Diag6A1]  == _mm256_extract_epi32(diag_results, 4));
-    assert(pD6[BB_EXTRACT_STEP_PATTERN(5, 6, 7)] == _mm256_extract_epi32(diag_results, 5));
-    assert(pD6[Diag6A2]  == _mm256_extract_epi32(diag_results, 6));
-    assert(pD6[BB_EXTRACT_STEP_PATTERN(23, 6, 7)] == _mm256_extract_epi32(diag_results, 7));
 #undef BB_EXTRACT_STEP_PATTERN
 
     const TCoeff* __restrict__ const pR1 = pcoeffs+offsetJR1;
@@ -653,7 +588,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     __m256i vect_pattern = _mm256_add_epi32(vect_empty_b3, _mm256_slli_epi32(vect_mover_b3, 1));
     
     static constexpr __m256i const_row_offsets_256 = (__m256i)(__v8su){offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1};
-    __m256i vect_row_pattern_values_256 = _mm256_add_epi32(value_7_diag, _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4));
+    __m256i vect_row_pattern_values_256 = _mm256_add_epi32(diag_results, _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4));
     __m256i vect_interm_256 = _mm256_hadd_epi32(vect_row_pattern_values_256, vect_row_pattern_values_256);
     vect_interm_256 = _mm256_hadd_epi32(vect_interm_256, vect_interm_256);
     value += _mm256_extract_epi32(vect_interm_256, 0);
