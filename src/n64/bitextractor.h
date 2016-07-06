@@ -82,4 +82,30 @@ inline uint64_t extract_second_diagonal(uint64_t v) {
     return ((v & meta_repeated_bit<uint64_t, 7, 8, 7>::value) *
             meta_repeated_bit<uint64_t, 0, 8, 8>::value) >> 56;
 }
+
+// meta_u32_extractor produces mask, multiplier, and right shift values for
+// extracting bits out of a 32 bit unsigned value
+template <unsigned start, unsigned count_remain, unsigned step, unsigned count_so_far = 0>
+class meta_u32_extractor {
+private:
+  static constexpr int mult_shift = 32 - start - count_remain;
+  static_assert(mult_shift >= 0, "broken");
+  static_assert(mult_shift < 32, "broken");
+  static constexpr uint32_t single_multiplier = 1ull << mult_shift;
+  static constexpr uint32_t remainder_multiplier =
+    meta_u32_extractor<start + step, count_remain - 1, step, count_so_far + 1>::multiplier;
+  static_assert((single_multiplier & remainder_multiplier) == 0, "broken");
+public:
+  static constexpr uint32_t multiplier = single_multiplier | remainder_multiplier;
+  static constexpr uint32_t and_mask = (1ull << start) | 
+    meta_u32_extractor<start + step, count_remain - 1, step, count_so_far + 1>::and_mask;
+  static constexpr uint32_t shift = 32 - count_remain; 
+};
+
+template <unsigned start, unsigned step, unsigned count_so_far>
+class meta_u32_extractor<start, 0u, step, count_so_far> {
+public:
+  static constexpr uint32_t multiplier = 0;
+  static constexpr uint32_t and_mask = 0;
+};
 #endif  // __BIT_EXTRACTOR_H

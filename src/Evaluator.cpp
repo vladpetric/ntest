@@ -19,7 +19,7 @@ using namespace std;
 //////////////////////////////////////////////////
 
 #if defined(__clang__)
-#define INLINE_HINT
+#define INLINE_HINT inline
 typedef unsigned long TConfig;
 #elif __GNUC__ >= 4
 #define INLINE_HINT inline __attribute__((always_inline)) 
@@ -327,7 +327,7 @@ INLINE_HINT TCoeff ConfigPMValue(const TCoeff* __restrict__ pcmove, TConfig conf
 
 
 // offsetJs for coefficients
-const int offsetJR1 = 0, sizeJR1 = 6561,
+static constexpr int offsetJR1 = 0, sizeJR1 = 6561,
 offsetJR2 = offsetJR1 + sizeJR1, sizeJR2 = 6561,
 offsetJR3 = offsetJR2 + sizeJR2, sizeJR3 = 6561,
 offsetJR4 = offsetJR3 + sizeJR3, sizeJR4 = 6561,
@@ -422,6 +422,8 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;
 
+    
+
 #define BB_EXTRACT_STEP_PATTERN(START, COUNT, STEP) \
     (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)] +  \
      2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
@@ -439,7 +441,117 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
         base2ToBase3Table[extract_second_diagonal(empty)] +
         base2ToBase3Table[extract_second_diagonal(mover)] * 2;
     value += pD8[Diag8B]; 
+    static constexpr __m256i const_pow2_to_pow3 = (__m256i)(__v32qu) {
+      0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40,
+      0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
+    };
+    static constexpr __m256i const_u32_lsbyte_mask = (__m256i)(__v8su) {
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+    };
 
+    static constexpr __m256i const_diag76_masks_lo = (__m256i)(__v8su) {
+      // D7
+      meta_u32_extractor<1, 4, 9>::and_mask, meta_u32_extractor<6, 4, 7>::and_mask,
+      meta_u32_extractor<8, 3, 9>::and_mask, meta_u32_extractor<15, 3, 7>::and_mask,
+      // D6
+      meta_u32_extractor<2, 4, 9>::and_mask, meta_u32_extractor<5, 4, 7>::and_mask,
+      meta_u32_extractor<16, 2, 9>::and_mask, meta_u32_extractor<23, 2, 7>::and_mask};
+    static constexpr __m256i const_diag76_multiplier_lo = (__m256i)(__v8su) {
+      // D7
+      meta_u32_extractor<1, 4, 9>::multiplier, meta_u32_extractor<6, 4, 7>::multiplier,
+      meta_u32_extractor<8, 3, 9>::multiplier, meta_u32_extractor<15, 3, 7>::multiplier,
+      // D6
+      meta_u32_extractor<2, 4, 9>::multiplier, meta_u32_extractor<5, 4, 7>::multiplier,
+      meta_u32_extractor<16, 2, 9>::multiplier, meta_u32_extractor<23, 2, 7>::multiplier};
+    static constexpr __m256i const_diag76_shift_lo = (__m256i)(__v8su) {
+      // D7
+      meta_u32_extractor<1, 4, 9>::shift, meta_u32_extractor<6, 4, 7>::shift,
+      meta_u32_extractor<8, 3, 9>::shift, meta_u32_extractor<15, 3, 7>::shift,
+      // D6
+      meta_u32_extractor<2, 4, 9>::shift, meta_u32_extractor<5, 4, 7>::shift,
+      meta_u32_extractor<16, 2, 9>::shift, meta_u32_extractor<23, 2, 7>::shift};
+  
+
+    static constexpr __m256i const_diag76_masks_hi = (__m256i)(__v8su) {
+      // D7
+      meta_u32_extractor<5, 3, 9>::and_mask, meta_u32_extractor<2, 3, 7>::and_mask,
+      meta_u32_extractor<3, 4, 9>::and_mask, meta_u32_extractor<4, 4, 7>::and_mask,
+      // D6
+      meta_u32_extractor<6, 2, 9>::and_mask, meta_u32_extractor<1, 2, 7>::and_mask,
+      meta_u32_extractor<2, 4, 9>::and_mask, meta_u32_extractor<5, 4, 7>::and_mask
+    };
+    static constexpr __m256i const_diag76_multiplier_hi = (__m256i)(__v8su) {
+      // D7
+      meta_u32_extractor<5, 3, 9>::multiplier, meta_u32_extractor<2, 3, 7>::multiplier,
+      meta_u32_extractor<3, 4, 9>::multiplier, meta_u32_extractor<4, 4, 7>::multiplier,
+      // D6
+      meta_u32_extractor<6, 2, 9>::multiplier, meta_u32_extractor<1, 2, 7>::multiplier,
+      meta_u32_extractor<2, 4, 9>::multiplier, meta_u32_extractor<5, 4, 7>::multiplier
+    };
+    static constexpr __m256i const_diag76_shift_hi = (__m256i)(__v8su) {
+      // D7
+      meta_u32_extractor<5, 3, 9>::shift, meta_u32_extractor<2, 3, 7>::shift,
+      meta_u32_extractor<3, 4, 9>::shift, meta_u32_extractor<4, 4, 7>::shift,
+      // D6
+      meta_u32_extractor<6, 2, 9>::shift, meta_u32_extractor<1, 2, 7>::shift,
+      meta_u32_extractor<2, 4, 9>::shift, meta_u32_extractor<5, 4, 7>::shift
+    };
+
+    int mover_lo = static_cast<int>(static_cast<uint32_t>(mover));
+    __m256i vect_mover_lo = _mm256_set_epi32(
+      mover_lo, mover_lo, mover_lo, mover_lo, mover_lo, mover_lo, mover_lo, mover_lo);
+
+    __m256i d76_mover_diag_lo = 
+      _mm256_srlv_epi32(
+        _mm256_mullo_epi32(
+          const_diag76_multiplier_lo,
+          _mm256_and_si256(vect_mover_lo, const_diag76_masks_lo)),
+        const_diag76_shift_lo);
+
+    int mover_hi = static_cast<int>(static_cast<uint32_t>(mover >> 32));
+    __m256i vect_mover_hi = _mm256_set_epi32(
+      mover_hi, mover_hi, mover_hi, mover_hi, mover_hi, mover_hi, mover_hi, mover_hi);
+    static constexpr __m256i factor_p3_hi = (__m256i)(__v8su) {
+      81, 81, 27, 27, 81, 81, 9, 9};
+    __m256i d76_mover_diag_hi = 
+      _mm256_srlv_epi32(
+        _mm256_mullo_epi32(
+          const_diag76_multiplier_hi,
+          _mm256_and_si256(vect_mover_hi, const_diag76_masks_hi)),
+        const_diag76_shift_hi);
+
+    auto p3_mover_diag_lo = _mm256_shuffle_epi8(const_pow2_to_pow3, d76_mover_diag_lo);
+    auto p3_mover_diag_hi = _mm256_shuffle_epi8(const_pow2_to_pow3, d76_mover_diag_hi);
+    auto p3_mover = _mm256_add_epi32(p3_mover_diag_lo,  _mm256_mullo_epi32(p3_mover_diag_hi, factor_p3_hi));
+
+    int empty_lo = static_cast<int>(static_cast<uint32_t>(empty));
+    __m256i vect_empty_lo = _mm256_set_epi32(
+      empty_lo, empty_lo, empty_lo, empty_lo, empty_lo, empty_lo, empty_lo, empty_lo);
+
+    __m256i d76_empty_diag_lo = 
+      _mm256_srlv_epi32(
+        _mm256_mullo_epi32(
+          const_diag76_multiplier_lo,
+          _mm256_and_si256(vect_empty_lo, const_diag76_masks_lo)),
+        const_diag76_shift_lo);
+
+    int empty_hi = static_cast<int>(static_cast<uint32_t>(empty >> 32));
+    __m256i vect_empty_hi = _mm256_set_epi32(
+      empty_hi, empty_hi, empty_hi, empty_hi, empty_hi, empty_hi, empty_hi, empty_hi);
+    __m256i d76_empty_diag_hi = 
+      _mm256_srlv_epi32(
+        _mm256_mullo_epi32(
+          const_diag76_multiplier_hi,
+          _mm256_and_si256(vect_empty_hi, const_diag76_masks_hi)),
+        const_diag76_shift_hi);
+
+    __m256i p3_empty_diag_lo = _mm256_shuffle_epi8(const_pow2_to_pow3, d76_empty_diag_lo);
+    __m256i p3_empty_diag_hi = _mm256_shuffle_epi8(const_pow2_to_pow3, d76_empty_diag_hi);
+    __m256i p3_empty = _mm256_add_epi32(p3_empty_diag_lo,  _mm256_mullo_epi32(p3_empty_diag_hi, factor_p3_hi));
+    __m256i d67_pattern = _mm256_add_epi32(p3_empty, _mm256_slli_epi32(p3_mover, 1));
+
+    static constexpr __m256i const_d67_offsets_256 = (__m256i)(__v8su){offsetJD7, offsetJD7, offsetJD7, offsetJD7, offsetJD6, offsetJD6, offsetJD6, offsetJD6};
+    __m256i diag_results = _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(d67_pattern, const_d67_offsets_256), 4);
     static constexpr __m256i const_diag7_masks_4x_lo = (__m256i)(__v8su) {
       meta_repeated_bit<uint32_t, 1, 4, 9>::value, 0,
       meta_repeated_bit<uint32_t, 6, 4, 7>::value, 0,
@@ -479,13 +591,10 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
 
     __m256i pattern_7_diag = _mm256_add_epi32(_mm256_srli_epi64(mover_diag_base3, 31), _mm256_srli_epi64(empty_diag_base3, 32));
     __m256i value_7_diag = _mm256_cvtepu32_epi64(_mm256_i64gather_epi32(reinterpret_cast<const int *>(pD7), pattern_7_diag, 4));
-
-    /*
-    value += _mm256_extract_epi32(value_7_diag, 0);
-    value += _mm256_extract_epi32(value_7_diag, 2);
-    value += _mm256_extract_epi32(value_7_diag, 4);
-    value += _mm256_extract_epi32(value_7_diag, 6);
-    */
+    assert(_mm256_extract_epi32(diag_results, 0) == _mm256_extract_epi32(value_7_diag, 0));
+    assert(_mm256_extract_epi32(diag_results, 1) == _mm256_extract_epi32(value_7_diag, 2));
+    assert(_mm256_extract_epi32(diag_results, 2) == _mm256_extract_epi32(value_7_diag, 4));
+    assert(_mm256_extract_epi32(diag_results, 3) == _mm256_extract_epi32(value_7_diag, 6));
     // Diag6 B1 and B2 
     value += pD6[BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
     value += pD6[BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
@@ -527,6 +636,11 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
          ((((empty & meta_repeated_bit<uint64_t, 31, 5, 7>::value) >> 27) * 0x20c49ba2000000) >> 57) +
          2 * ((((mover & meta_repeated_bit<uint64_t, 31, 5, 7>::value) >> 27) * 0x20c49ba2000000) >> 57);
     value += pD5[Diag5B2];
+
+    assert(pD6[Diag6A1]  == _mm256_extract_epi32(diag_results, 4));
+    assert(pD6[BB_EXTRACT_STEP_PATTERN(5, 6, 7)] == _mm256_extract_epi32(diag_results, 5));
+    assert(pD6[Diag6A2]  == _mm256_extract_epi32(diag_results, 6));
+    assert(pD6[BB_EXTRACT_STEP_PATTERN(23, 6, 7)] == _mm256_extract_epi32(diag_results, 7));
 #undef BB_EXTRACT_STEP_PATTERN
 
     const TCoeff* __restrict__ const pR1 = pcoeffs+offsetJR1;
