@@ -439,6 +439,8 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
         base2ToBase3Table[extract_second_diagonal(empty)] +
         base2ToBase3Table[extract_second_diagonal(mover)] * 2;
     value += pD8[Diag8B]; 
+#undef BB_EXTRACT_STEP_PATTERN
+
     static constexpr __m256i const_pow2_to_pow3 = (__m256i)(__v32qu) {
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40,
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
@@ -576,7 +578,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
          2 * ((((mover & meta_repeated_bit<uint64_t, 31, 5, 7>::value) >> 27) * 0x20c49ba2000000) >> 57);
     value += pD5[Diag5B2];
 
-#undef BB_EXTRACT_STEP_PATTERN
 
     const TCoeff* __restrict__ const pR1 = pcoeffs+offsetJR1;
     const TCoeff* __restrict__ const pR2 = pcoeffs+offsetJR2;
