@@ -441,6 +441,9 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     value += pD8[Diag8B]; 
 #undef BB_EXTRACT_STEP_PATTERN
 
+    static constexpr __m128i v128_pow2_to_pow3 = (__m128i)(__v16qu) {
+      0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
+    };
     static constexpr __m256i const_pow2_to_pow3 = (__m256i)(__v32qu) {
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40,
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
@@ -584,9 +587,33 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     const TCoeff* __restrict__ const pR3 = pcoeffs+offsetJR3;
     const TCoeff* __restrict__ const pR4 = pcoeffs+offsetJR4;
 
-    __m256i vect_mover_b3 = _mm256_i32gather_epi32(reinterpret_cast<const int *>(base2ToBase3Table), _mm256_cvtepu8_epi32(_mm_cvtsi64_si128(mover)), 4);
-    __m256i vect_empty_b3 = _mm256_i32gather_epi32(reinterpret_cast<const int *>(base2ToBase3Table), _mm256_cvtepu8_epi32(_mm_cvtsi64_si128(empty)), 4);
-    __m256i vect_pattern = _mm256_add_epi32(vect_empty_b3, _mm256_slli_epi32(vect_mover_b3, 1));
+    static constexpr __m128i v128_low_nibble = (__m128i)(__v16qu) {
+      0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf
+    };
+    static constexpr __m128i v128_high_nibble = (__m128i)(__v16qu) {
+      0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0
+    };
+    static constexpr __m128i v128_81 = (__m128i)(__v8hu) {
+      81, 81, 81, 81, 81, 81, 81, 81
+    };
+
+    __m128i v128_zero = _mm_setzero_si128();
+    __m128i vect_mover = _mm_set_epi64x(0, mover);
+    __m128i unpack_mover = _mm_unpacklo_epi8(vect_mover, v128_zero);
+    __m128i vect_p3_mover_lonib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_and_si128(unpack_mover, v128_low_nibble)); 
+    __m128i vect_p3_mover_hinib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_mover, v128_high_nibble), 4));
+    __m128i vect_p3_mover = _mm_add_epi16(vect_p3_mover_lonib,  _mm_mullo_epi16(vect_p3_mover_hinib, v128_81));
+    __m128i vect_empty = _mm_set_epi64x(0, empty);
+    __m128i unpack_empty = _mm_unpacklo_epi8(vect_empty, v128_zero);
+    __m128i vect_p3_empty_lonib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_and_si128(unpack_empty, v128_low_nibble)); 
+    __m128i vect_p3_empty_hinib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_empty, v128_high_nibble), 4));
+    __m128i vect_p3_empty = _mm_add_epi16(vect_p3_empty_lonib,  _mm_mullo_epi16(vect_p3_empty_hinib, v128_81));
+    __m256i vect_pattern = _mm256_cvtepi16_epi32(_mm_add_epi16(vect_p3_empty, _mm_slli_epi32(vect_p3_mover, 1)));
+
     
     static constexpr __m256i const_row_offsets_256 = (__m256i)(__v8su){offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1};
     __m256i vect_row_pattern_values_256 = _mm256_add_epi32(diag_results, _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4));
