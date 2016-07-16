@@ -66,7 +66,6 @@ void CNodeStats::Out(ostream& os) const {
 	double seconds=Seconds();
 	double nodes=Nodes();
 	double MNPS = nodes/seconds*1e-6;
-	double npe = nEvals?nodes/nEvals:0;
 	double nInodes = nodes-nEvals;
 	double epi = nInodes?nEvals/nInodes:0;
 

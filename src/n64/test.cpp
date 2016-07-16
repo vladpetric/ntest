@@ -1,8 +1,9 @@
-#include "stdafx.h"
+#include "types.h"
 
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 // in MSVC, break into the debugger if we're in debug mode and have a test failure
 #ifdef _MSC_VER
@@ -72,7 +73,7 @@ void assertEquals(bool expected, bool actual) {
 
 void assertHexEquals(u64 expected, u64 actual) {
 	if (expected!=actual) {
-		printXorBoard(expected, actual);
+		//printXorBoard(expected, actual);
 		std::ostringstream s;
 		s << "Expected 0x" << std::hex << expected << " but was 0x" << actual << " (xor: " << (expected^actual) << ")";
 		fail(s);

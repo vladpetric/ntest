@@ -13,7 +13,7 @@
 #include "n64.h"
 
 void printCompileType() {
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(__LP64__)
 	std::cout << "64-bit compile\n";
 #else
 	std::cout << "32-bit compile\n";

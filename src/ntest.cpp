@@ -5,7 +5,9 @@
 
 // othello program
 
+#ifdef _MSC_VER 
 #pragma warning(disable: 4786)
+#endif
 
 #include <time.h>
 #include <cstdlib>

@@ -9,7 +9,7 @@
 #include "GGSMessage.h"
 #include "OsMessage.h"
 #include <string>
-#include <strstream>
+#include <sstream>
 using namespace std;
 
 ggsstream::ggsstream() : iostream(NULL) {
@@ -224,7 +224,7 @@ void ggsstream::ProcessLine(string& sLine){
 //	Post() routine
 
 void ggsstream::ProcessMessage() {
-	istrstream is(sMsg.c_str());
+	istringstream is(sMsg);
 	CMsg *pmsg;
 
 	pmsg=GetMsgType(is);

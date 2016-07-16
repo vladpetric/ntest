@@ -15,12 +15,12 @@ class CComputerDefaults {
 public:
 	CComputerDefaults();
 
-	char cEval, cCoeffSet;
 	std::string sCalcParams;
+	char cEval, cCoeffSet;
 
 	CValue vContempts[2];
 	
-	int iPruneMidgame, iPruneEndgame, nRandShifts[2];
+	int iPruneEndgame, iPruneMidgame, nRandShifts[2];
 	u4 iEdmund;
 	u4 fsPrint, fsPrintOpponent;
 	enum {kNoBook, kBook, kNegamaxBook} booklevel;

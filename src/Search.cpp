@@ -146,6 +146,9 @@ CValue StaticValue(Pos2& pos2, int iff) {
         break;
     case 0:
         result=evaluator->EvalMobs(pos2, nMovesPlayer, nMovesOpponent);
+        break;
+    default:
+        assert(false);
     }
 
     if (false) {
@@ -348,7 +351,7 @@ inline void ValueTreeNoSort(Pos2& pos2, int height, int hChild, CValue alpha, CV
 inline bool ValueMove(Pos2& pos2, int height, int hChild, CValue alpha, CValue beta, CMove& move, CMoves& moves, int iPrune,
                                       bool fNegascout, CMoveValue& best) {
 
-    CValue vChild, vNegascout, vSearchAlpha;
+    CValue vChild, vSearchAlpha;
 
     // initialization
     vSearchAlpha=std::max(best.value, alpha);
@@ -370,7 +373,6 @@ inline bool ValueMove(Pos2& pos2, int height, int hChild, CValue alpha, CValue b
         TREEDEBUG_BEFORE_NEGASCOUT;
         vChild=ChildValue(pos2, hChild, vSearchAlpha, vSearchAlpha+1, iPrune);
         TREEDEBUG_AFTER_NEGASCOUT;
-        vNegascout=vChild; // save value for debugging
         if (vChild>vSearchAlpha && vChild<beta) {
             TREEDEBUG_BEFORE;
             vChild=ChildValue(pos2, hChild, vSearchAlpha, beta, iPrune);
@@ -538,7 +540,7 @@ inline CValue SolveValue(Pos2& pos2, CValue alpha, CValue beta) {
 //        If book, set to minimum height to read from book.
 ///////////////////////////////////////////////////////////////////////
 CValue ChildValue(Pos2& pos2, int height, CValue alpha, CValue beta, int iPrune) {
-    CValue result;
+    CValue result(0);
 
     // Solver evaluation if near end
     if (pos2.NEmpty()<=hSolverStart) {
@@ -624,9 +626,9 @@ static void OutputSearchInfo(std::ostream& os, CMoveValue mv, bool fPassBefore, 
 
 void ValueMulti(Pos2& pos2, int height, CValue alpha, CValue beta, int iPrune, u4 nBest, const std::vector<CMoveValue>& mvs
                 , bool fPrintBestMoves, bool fPassBefore, std::vector<CMoveValue>& mvsEvaluated, u4& nValued) {
-    CValue vChild, vSearchAlpha;
+    CValue vChild, vSearchAlpha = alpha;
     CMove    move;
-    int hChild,nFlipped;
+    int hChild;
     std::vector<CMoveValue> mvsLow;
     CMoveValue mv;
     std::vector<CMoveValue>::const_iterator i;

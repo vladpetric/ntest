@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <math.h>
+#include "n64/flips.h"
 #include "n64/types.h"
 #include "n64/test.h"
 #include "n64/utils.h"

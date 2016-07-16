@@ -204,7 +204,7 @@ SUCCESS:
 }
 
 static void TestGetNextOne(CMoves& moves, int square) {
-	CMove move;
+	CMove move(-1);
 	TEST(moves.GetNext(move));
 	TEST(move.Square()==square);
 }
@@ -234,7 +234,7 @@ void CMoves::TestGetNext() {
 			001, 006, 010, 011, 016, 017,
 			060, 061, 066, 067, 071, 076
 	};
-	for (int i=0; i<sizeof(results)/sizeof(int); i++) {
+	for (unsigned i=0; i<sizeof(results)/sizeof(int); ++i) {
 		TestGetNextOne(moves, results[i]);
 	}
 	TEST(moves.GetNext(move)==false);

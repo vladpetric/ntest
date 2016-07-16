@@ -6,7 +6,7 @@
 #include <cstring>
 #include "OsMessage.h"
 #include "ggsstream.h"
-#include <strstream>
+#include <sstream>
 
 using namespace std;
 
@@ -68,7 +68,7 @@ void CMsgOsComment::In(istream& is) {
 	string sPretext;
 
 	getline(is, sPretext, ':');
-	istrstream isPretext(sPretext.c_str());
+	istringstream isPretext(sPretext);
 	isPretext >> cTo >> pi;
 	is >> ws;
 	getline(is, sComment);
@@ -125,9 +125,9 @@ void CMsgOsErr::In(istream& is) {
 		err=kErrRatedMismatch;
 	else if (sText=="you are not registered.")
 		err=kErrUnregistered;
-	else if (sText.find("illegal move")!=-1)
+	else if (sText.find("illegal move")!=string::npos)
 		err=kErrIllegalMove;
-	else if (sText.find("not found")!=-1)
+	else if (sText.find("not found")!=string::npos)
 		err=kErrUserNotFound;
 	else if (sText=="Player is not accepting new matches.")
 		err=kErrNotAcceptingMatches;
@@ -208,7 +208,7 @@ void CMsgOsFinger::In(istream& is) {
 		if (sLine.find(':')==string::npos)
 			break;
 
-		istrstream isLine(sLine.c_str());
+		istringstream isLine(sLine);
 
 		// get key and strip terminal spaces
 		getline(isLine, sKey, ':');
@@ -226,7 +226,7 @@ void CMsgOsFinger::In(istream& is) {
 
 	// second section, rating info
 	while (getline(is, sLine)) {
-		istrstream isLine(sLine.c_str());
+		istringstream isLine(sLine);
 		isLine >> fr;
 		frs.push_back(fr);
 	}

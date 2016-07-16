@@ -31,7 +31,7 @@ public:
 	virtual void Handle();
 	void In(std::istream& is);
 
-	int nAlias1, nAlias2;
+	unsigned nAlias1, nAlias2;
 	std::vector<CGGSAlias> valiases;
 };
 
@@ -92,7 +92,7 @@ public:
 	virtual void Handle();
 	void In(std::istream& is);
 
-	int nUsers;
+	unsigned nUsers;
 	std::vector<CGGSWhoUser> wus;
 };
 

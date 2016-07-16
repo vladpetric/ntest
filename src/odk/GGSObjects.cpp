@@ -4,7 +4,7 @@
 #include "types.h"
 
 #include "GGSObjects.h"
-#include <strstream>
+#include <sstream>
 using namespace std;
 
 void CGGSAlias::In(istream& is) {
@@ -15,7 +15,7 @@ void CGGSAlias::In(istream& is) {
 void CGGSWhoUser::In(istream& is) {
 	string sLine;
 	getline(is, sLine);
-	istrstream isl(sLine.c_str(), sLine.size());
+	istringstream isl(sLine);
 	isl >> sLogin >> cRegistered >> sIdle >> sOnline >> sIPAddr >> sHostName;
 }
 
