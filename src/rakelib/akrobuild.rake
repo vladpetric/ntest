@@ -115,6 +115,18 @@ end
 
 #Builder encapsulates the compilation/linking/dependecy checking functionality
 module Builder
+  def Builder.compile_base_cmdline(mode)
+    "#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]}"
+  end
+  def Builder.dependency_cmdline(mode, src)
+    "#{Builder.compile_base_cmdline(mode)} -M #{src}"
+  end
+  def Builder.compile_cmdline(mode, src, obj)
+    "#{Builder.compile_base_cmdline(mode)} -c #{src} -o #{obj}"
+  end
+  def Builder.link_cmdline(mode, objs, bin)
+    "#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} #{objs.join(' ')} #{$AKRO_ADDITIONAL_LINK_FLAGS} -o #{bin}"
+  end
   def Builder.create_depcache(src, dc)
     success = false
     mode = FileMapper.get_mode_from_dc(dc)
@@ -124,8 +136,9 @@ module Builder
     puts "Determining dependencies for #{dc}" if $AKRO_VERBOSE
     begin
       #Using backticks as Rake's sh outputs the command. Don't want that here.
-      puts "#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}" if $AKRO_VERBOSE
-      deps = `#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}`
+      cmdline = Builder.dependency_cmdline(mode, src)
+      puts cmdline if $AKRO_VERBOSE
+      deps = `#{cmdline}`
       raise "Dependency determination failed for #{src}" if $?.to_i != 0
       # NOTE(vlad): spaces within included filenames are not supported
       # Get rid of \ at the end of lines, and also of the newline
@@ -146,7 +159,7 @@ module Builder
     mode = FileMapper.get_mode(obj)
     basedir, _ = File.split(obj)
     FileUtils.mkdir_p(basedir)
-    RakeFileUtils::sh("#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -c #{src} -o #{obj}") do |ok, res|
+    RakeFileUtils::sh(Builder.compile_cmdline(mode, src, obj)) do |ok, res|
       raise "Compilation failed for #{src}" if !ok
     end
   end
@@ -155,7 +168,7 @@ module Builder
     mode = FileMapper.get_mode(bin)
     basedir, _ = File.split(bin)
     FileUtils.mkdir_p(basedir)
-    RakeFileUtils::sh("#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} #{objs.join(' ')} #{$AKRO_ADDITIONAL_LINK_FLAGS} -o #{bin}") do |ok, res|
+    RakeFileUtils::sh(Builder.link_cmdline(mode, objs, bin)) do |ok, res|
       raise "Linking failed for #{bin}" if !ok
     end
   end
