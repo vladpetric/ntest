@@ -79,8 +79,7 @@ bool CCacheData::Load(int aHeight, int aPrune, int nEmpty, CValue alpha, CValue 
 					   int& aiFastestFirst, CValue& searchAlpha, CValue& searchBeta, CValue& value) {
 
 	if (printCacheStores)
-		printf("Loading from cache at %p: [%hd, %hd] at height %d/%d - window is (%hd,%hd)\n", static_cast<void*>(this),lBound, uBound, height, aPrune, searchAlpha, searchBeta);
-	//	printf("Loading from cache: [%hd, %hd] at height %d/%d - window is (%hd,%hd)\n",lBound, uBound, height, aPrune, searchAlpha, searchBeta);
+		printf("Loading from cache at %p: [%d, %d] at height %d/%d - window is (%d,%d)\n", static_cast<void*>(this),lBound, uBound, height, aPrune, searchAlpha, searchBeta);
 
 	aBestMove=bestMove;
 	aiFastestFirst=iFastestFirst;
@@ -115,8 +114,7 @@ bool CCacheData::Load(int aHeight, int aPrune, int nEmpty, CValue alpha, CValue 
 bool CCacheData::AlphaCutoff(int aHeight, int aPrune, int nEmpty, CValue alpha) const {
 
 	if (printCacheStores)
-		printf("Checking Alpha Cutoff from cache at %p: [%hd, %hd] at height %d/%d - alpha is %d\n",static_cast<void*>(const_cast<CCacheData*>(this)),lBound, uBound, height, aPrune, alpha);
-	//	printf("Loading from cache: [%hd, %hd] at height %d/%d - window is (%hd,%hd)\n",lBound, uBound, height, aPrune, searchAlpha, searchBeta);
+		printf("Checking Alpha Cutoff from cache at %p: [%d, %d] at height %d/%d - alpha is %d\n",static_cast<void*>(const_cast<CCacheData*>(this)),lBound, uBound, height, aPrune, alpha);
 
 	return (Loadable(aHeight, aPrune, nEmpty) && uBound<=alpha);
 }
@@ -170,8 +168,7 @@ void CCacheData::Store(int aHeight, int aPrune, int anEmpty, CMove aBestMove, in
 		}
 
 		if (printCacheStores)
-			printf("Added to cache at %p: [%hd, %hd] at height %d - window was (%hd,%hd)\n",static_cast<void*>(this),lBound, uBound, height,searchAlpha, searchBeta);
-		//	printf("Added to cache: [%hd, %hd] at height %d - window was (%hd,%hd)\n",lBound, uBound, height,searchAlpha, searchBeta);
+			printf("Added to cache at %p: [%d, %d] at height %d - window was (%d,%d)\n",static_cast<void*>(this),lBound, uBound, height,searchAlpha, searchBeta);
 	}
 }
 
