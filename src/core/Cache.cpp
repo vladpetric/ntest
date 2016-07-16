@@ -211,7 +211,7 @@ void CCacheData::Print(bool blackMove) const {
 /////////////////////////////////////////////////
 
 CCache::CCache(u4 anbuckets) {
-	fprintf(stderr, "Creating cache with %d buckets (%lu MB)\n",anbuckets, anbuckets*sizeof(CCacheData)>>20);
+	fprintf(stderr, "Creating cache with %d buckets (%llu MB)\n",anbuckets, static_cast<unsigned long long>(anbuckets*sizeof(CCacheData)>>20));
 	nBuckets=anbuckets;
 	buckets=new CCacheData[nBuckets];
 	assert(buckets);
