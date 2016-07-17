@@ -96,6 +96,13 @@ module FileMapper
     raise "No sources for base name #{file}" if srcs.length == 0
     srcs[0]
   end
+  def FileMapper.map_dc_to_compcmd(path)
+    raise "#{path} is not a .depcache file" if !path.end_with?('.depcache') || !path.start_with?('.akro')
+    path.gsub(/\.depcache$/, ".compcmd" )
+  end
+  def FileMapper.map_exe_to_linkcmd(path)
+    ".akro/#{path.gsub(/\.exe$/, ".linkcmd" )}"
+  end
   # Maps header file to its corresponding cpp file, if it exists
   # E.g., a/b/c.h maps to a/b/c.cpp, if a/b/c.cpp exists, otherwise nil
   def FileMapper.map_header_to_cpp(path)
@@ -123,6 +130,9 @@ module Builder
   end
   def Builder.compile_cmdline(mode, src, obj)
     "#{Builder.compile_base_cmdline(mode)} -c #{src} -o #{obj}"
+  end
+  def Builder.link_cmdline_placeholder(mode)
+    "#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} <placeholder for objs> #{$AKRO_ADDITIONAL_LINK_FLAGS} -o <placeholder for binary>"
   end
   def Builder.link_cmdline(mode, objs, bin)
     "#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} #{objs.join(' ')} #{$AKRO_ADDITIONAL_LINK_FLAGS} -o #{bin}"
@@ -199,8 +209,46 @@ module Builder
   end
 end
 
+#Phony task that forces anything depending on it to run 
+task "always"
+  
+rule ".compcmd" => ->(dc) {
+  mode = FileMapper.get_mode_from_dc(dc)
+  cmd = Builder.compile_base_cmdline(mode)
+  if File.exists?(dc) && File.read(dc).strip == cmd then
+    []
+  else
+    "always"
+  end
+} do |task|
+  basedir, _ = File.split(task.name)
+  FileUtils.mkdir_p(basedir)
+  output = File.open(task.name, "w")
+  mode = FileMapper.get_mode_from_dc(task.name)
+  output << Builder.compile_base_cmdline(mode) << "\n"
+  output.close
+end
+
+rule ".linkcmd" => ->(dc) {
+  mode = FileMapper.get_mode_from_dc(dc)
+  cmd = Builder.link_cmdline_placeholder(mode)
+  if File.exists?(dc) && File.read(dc).strip == cmd then
+    []
+  else
+    "always"
+  end
+} do |task|
+  basedir, _ = File.split(task.name)
+  FileUtils.mkdir_p(basedir)
+  output = File.open(task.name, "w")
+  mode = FileMapper.get_mode_from_dc(task.name)
+  output << Builder.link_cmdline_placeholder(mode) << "\n"
+  output.close
+end
+
 rule ".depcache" => ->(dc){
-  [FileMapper.map_dc_to_cpp(dc)] + (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
+  [FileMapper.map_dc_to_compcmd(dc), FileMapper.map_dc_to_cpp(dc)] + 
+  (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
   src = FileMapper.map_dc_to_cpp(task.name)
   Builder.create_depcache(src, task.name)
@@ -210,7 +258,8 @@ rule $OBJ_EXTENSION => ->(obj){
   src = FileMapper.map_obj_to_cpp(obj)
   raise "No source for object file #{obj}" if src.nil?
   dc = FileMapper.map_obj_to_dc(obj)
-  [src, dc] + (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
+  [src, dc, FileMapper.map_dc_to_compcmd(dc)] +
+  (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
   src = FileMapper.map_obj_to_cpp(task.name)
   Builder.compile_object(src, task.name)
@@ -221,9 +270,9 @@ rule ".exe" => ->(binary){
   mode = FileMapper.get_mode(binary)
   cpp = FileMapper.map_obj_to_cpp(obj)
   raise "No proper #{$CPP_EXTENSIONS.join(',')} file found for #{binary}" if cpp.nil?
-  Builder.depcache_object_collect(mode, [cpp])
+  [FileMapper.map_exe_to_linkcmd(binary)] + Builder.depcache_object_collect(mode, [cpp])
 } do |task|
-  Builder.link_binary(task.prerequisites, task.name)
+  Builder.link_binary(task.prerequisites[1..-1], task.name)
 end
 
 task :clean do
