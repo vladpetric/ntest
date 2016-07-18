@@ -375,7 +375,7 @@ static INLINE_HINT TCoeff ValueTrianglePatternsJ(const TCoeff* __restrict__ pcmo
     return value;
 }
 
-static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlackMove, TCoeff *const pcoeffs, u4 nMovesPlayer, u4 nMovesOpponent) {
+static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlackMove, TCoeff * __restrict__ const pcoeffs, u4 nMovesPlayer, u4 nMovesOpponent) {
 // This function implements a linear pattern evaluator. 
 //
 // Most of the work is in extracting base-3 patterns such as rows, columns,
@@ -613,7 +613,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
       _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_empty, v128_high_nibble), 4));
     __m128i vect_p3_empty = _mm_add_epi16(vect_p3_empty_lonib,  _mm_mullo_epi16(vect_p3_empty_hinib, v128_81));
     __m256i vect_pattern = _mm256_cvtepi16_epi32(_mm_add_epi16(vect_p3_empty, _mm_slli_epi32(vect_p3_mover, 1)));
-
     
     static constexpr __m256i const_row_offsets_256 = (__m256i)(__v8su){offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1};
     __m256i vect_row_pattern_values_256 = _mm256_add_epi32(diag_results, _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4));
