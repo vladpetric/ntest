@@ -13,9 +13,9 @@ if system =~ /Linux/
   else
     puts "Unknown machine #{machine}"
   end
-elsif system =~ /^Mac OS\/X/
+elsif system =~ /Mac OS/
   $COMPILER = "clang++"
-  $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I."
+  $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I. -stdlib=libc++"
 else
   puts "Unknown system #{system}"
 end
