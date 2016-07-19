@@ -1,4 +1,24 @@
 $VERBOSE_BUILD = true
 $COMPILER_PREFIX = "ccache"
-$COMPILE_FLAGS = "-std=c++14 -pthread -Wall -mavx2 -mbmi2 -I."
+system = `uname -s`
+machine = `uname -m`
+
+if system =~ /Linux/
+  if machine =~ /^arm/
+    $COMPILER = "clang++-3.8"
+    $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror"
+  elsif machine =~ /^x86/ || machine =~ /^amd64/
+    #$COMPILER = "clang++-3.8"
+    $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -mavx2 -mbmi2 -I. -Wno-overloaded-virtual"
+    $ADDITIONAL_LINK_FLAGS = "-L/opt/gperftools/lib -ltcmalloc_and_profiler"
+  else
+    puts "Unknown machine #{machine}"
+  end
+elsif system =~ /Mac OS/
+  $COMPILER = "clang++"
+  $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I. -stdlib=libc++"
+else
+  puts "Unknown system #{system}"
+end
+
 task :default => "release/ntest.exe"

@@ -13,6 +13,7 @@ $AKRO_LINKER_PREFIX = $LINKER_PREFIX.nil? ? $AKRO_COMPILER_PREFIX : $LINKER_PREF
 $AKRO_LINKER = $LINKER.nil? ? $AKRO_COMPILER : $LINKER
 $AKRO_LINK_FLAGS = $LINK_FLAGS.nil? ? $AKRO_COMPILE_FLAGS : $LINK_FLAGS
 $AKRO_MODE_LINK_FLAGS = $MODE_LINK_FLAGS.nil? ? $AKRO_MODE_COMPILE_FLAGS : $MODE_LINK_FLAGS 
+$AKRO_ADDITIONAL_LINK_FLAGS = $ADDITIONAL_LINK_FLAGS.nil? ? "" : $ADDITIONAL_LINK_FLAGS
 
 $HEADER_EXTENSIONS = [".h", ".hpp"]
 $CPP_EXTENSIONS = [".c", ".cc", ".cpp", ".cxx", ".c++"]
@@ -95,6 +96,13 @@ module FileMapper
     raise "No sources for base name #{file}" if srcs.length == 0
     srcs[0]
   end
+  def FileMapper.map_dc_to_compcmd(path)
+    raise "#{path} is not a .depcache file" if !path.end_with?('.depcache') || !path.start_with?('.akro')
+    path.gsub(/\.depcache$/, ".compcmd" )
+  end
+  def FileMapper.map_exe_to_linkcmd(path)
+    ".akro/#{path.gsub(/\.exe$/, ".linkcmd" )}"
+  end
   # Maps header file to its corresponding cpp file, if it exists
   # E.g., a/b/c.h maps to a/b/c.cpp, if a/b/c.cpp exists, otherwise nil
   def FileMapper.map_header_to_cpp(path)
@@ -114,6 +122,21 @@ end
 
 #Builder encapsulates the compilation/linking/dependecy checking functionality
 module Builder
+  def Builder.compile_base_cmdline(mode)
+    "#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]}"
+  end
+  def Builder.dependency_cmdline(mode, src)
+    "#{Builder.compile_base_cmdline(mode)} -M #{src}"
+  end
+  def Builder.compile_cmdline(mode, src, obj)
+    "#{Builder.compile_base_cmdline(mode)} -c #{src} -o #{obj}"
+  end
+  def Builder.link_cmdline_placeholder(mode)
+    "#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} <placeholder for objs> #{$AKRO_ADDITIONAL_LINK_FLAGS} -o <placeholder for binary>"
+  end
+  def Builder.link_cmdline(mode, objs, bin)
+    "#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} #{objs.join(' ')} #{$AKRO_ADDITIONAL_LINK_FLAGS} -o #{bin}"
+  end
   def Builder.create_depcache(src, dc)
     success = false
     mode = FileMapper.get_mode_from_dc(dc)
@@ -123,8 +146,9 @@ module Builder
     puts "Determining dependencies for #{dc}" if $AKRO_VERBOSE
     begin
       #Using backticks as Rake's sh outputs the command. Don't want that here.
-      puts "#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}" if $AKRO_VERBOSE
-      deps = `#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -M #{src}`
+      cmdline = Builder.dependency_cmdline(mode, src)
+      puts cmdline if $AKRO_VERBOSE
+      deps = `#{cmdline}`
       raise "Dependency determination failed for #{src}" if $?.to_i != 0
       # NOTE(vlad): spaces within included filenames are not supported
       # Get rid of \ at the end of lines, and also of the newline
@@ -145,7 +169,7 @@ module Builder
     mode = FileMapper.get_mode(obj)
     basedir, _ = File.split(obj)
     FileUtils.mkdir_p(basedir)
-    RakeFileUtils::sh("#{$AKRO_COMPILER_PREFIX}#{$AKRO_COMPILER} #{$AKRO_COMPILE_FLAGS} #{$AKRO_MODE_COMPILE_FLAGS[mode]} -c #{src} -o #{obj}") do |ok, res|
+    RakeFileUtils::sh(Builder.compile_cmdline(mode, src, obj)) do |ok, res|
       raise "Compilation failed for #{src}" if !ok
     end
   end
@@ -154,7 +178,7 @@ module Builder
     mode = FileMapper.get_mode(bin)
     basedir, _ = File.split(bin)
     FileUtils.mkdir_p(basedir)
-    RakeFileUtils::sh("#{$AKRO_LINKER_PREFIX}#{$AKRO_LINKER} #{$AKRO_LINK_FLAGS} #{$AKRO_MODE_LINK_FLAGS[mode]} #{objs.join(' ')} -o #{bin}") do |ok, res|
+    RakeFileUtils::sh(Builder.link_cmdline(mode, objs, bin)) do |ok, res|
       raise "Linking failed for #{bin}" if !ok
     end
   end
@@ -185,8 +209,46 @@ module Builder
   end
 end
 
+#Phony task that forces anything depending on it to run 
+task "always"
+  
+rule ".compcmd" => ->(dc) {
+  mode = FileMapper.get_mode_from_dc(dc)
+  cmd = Builder.compile_base_cmdline(mode)
+  if File.exists?(dc) && File.read(dc).strip == cmd then
+    []
+  else
+    "always"
+  end
+} do |task|
+  basedir, _ = File.split(task.name)
+  FileUtils.mkdir_p(basedir)
+  output = File.open(task.name, "w")
+  mode = FileMapper.get_mode_from_dc(task.name)
+  output << Builder.compile_base_cmdline(mode) << "\n"
+  output.close
+end
+
+rule ".linkcmd" => ->(dc) {
+  mode = FileMapper.get_mode_from_dc(dc)
+  cmd = Builder.link_cmdline_placeholder(mode)
+  if File.exists?(dc) && File.read(dc).strip == cmd then
+    []
+  else
+    "always"
+  end
+} do |task|
+  basedir, _ = File.split(task.name)
+  FileUtils.mkdir_p(basedir)
+  output = File.open(task.name, "w")
+  mode = FileMapper.get_mode_from_dc(task.name)
+  output << Builder.link_cmdline_placeholder(mode) << "\n"
+  output.close
+end
+
 rule ".depcache" => ->(dc){
-  [FileMapper.map_dc_to_cpp(dc)] + (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
+  [FileMapper.map_dc_to_compcmd(dc), FileMapper.map_dc_to_cpp(dc)] + 
+  (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
   src = FileMapper.map_dc_to_cpp(task.name)
   Builder.create_depcache(src, task.name)
@@ -196,7 +258,8 @@ rule $OBJ_EXTENSION => ->(obj){
   src = FileMapper.map_obj_to_cpp(obj)
   raise "No source for object file #{obj}" if src.nil?
   dc = FileMapper.map_obj_to_dc(obj)
-  [src, dc] + (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
+  [src, dc, FileMapper.map_dc_to_compcmd(dc)] +
+  (File.exist?(dc) ? File.readlines(dc).map{|line| line.strip}: [])
 } do |task|
   src = FileMapper.map_obj_to_cpp(task.name)
   Builder.compile_object(src, task.name)
@@ -207,9 +270,9 @@ rule ".exe" => ->(binary){
   mode = FileMapper.get_mode(binary)
   cpp = FileMapper.map_obj_to_cpp(obj)
   raise "No proper #{$CPP_EXTENSIONS.join(',')} file found for #{binary}" if cpp.nil?
-  Builder.depcache_object_collect(mode, [cpp])
+  [FileMapper.map_exe_to_linkcmd(binary)] + Builder.depcache_object_collect(mode, [cpp])
 } do |task|
-  Builder.link_binary(task.prerequisites, task.name)
+  Builder.link_binary(task.prerequisites[1..-1], task.name)
 end
 
 task :clean do

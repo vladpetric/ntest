@@ -74,8 +74,6 @@ void ReadParameters(CComputerDefaults& cd1, CComputerDefaults& cd2, CDrawTreeLim
 #define RANDSEED time(0)
 //#define RANDSEED 7
 
-const int defaultMatchMinutes=15;
-const int defaultMatchDepth=10;
 
 static std::string fnOpening;
 

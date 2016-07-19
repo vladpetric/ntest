@@ -71,6 +71,7 @@ public:
 	const std::string m_path;
 
 	FileIo(const std::string& path, bool forReading);
+    FileIo(FILE* fpt): fp(fpt) {}
 	size_t write(const void* data, size_t size, size_t count) {
 		return fwrite(data, size, count, fp);
 	}

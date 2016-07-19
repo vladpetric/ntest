@@ -440,39 +440,42 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
         base2ToBase3Table[extract_second_diagonal(mover)] * 2;
     value += pD8[Diag8B]; 
 #undef BB_EXTRACT_STEP_PATTERN
-
-    static constexpr __m128i v128_low_nibble = (__m128i)(__v16qu) {
+    typedef unsigned char __16char __attribute__ ((__vector_size__ (16)));
+    typedef unsigned short __8shorts __attribute__ ((__vector_size__ (16)));
+    typedef unsigned char __32chars __attribute__ ((__vector_size__ (32)));
+    typedef unsigned int __8unsigned __attribute__ ((__vector_size__ (32)));
+    static constexpr __m128i v128_low_nibble = (__m128i)(__16char) {
       0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf
     };
-    static constexpr __m128i v128_high_nibble = (__m128i)(__v16qu) {
+    static constexpr __m128i v128_high_nibble = (__m128i)(__16char) {
       0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0
     };
-    static constexpr __m128i v128_81 = (__m128i)(__v8hu) {
+    static constexpr __m128i v128_81 = (__m128i)(__8shorts) {
       81, 81, 81, 81, 81, 81, 81, 81
     };
 
-    static constexpr __m128i v128_pow2_to_pow3 = (__m128i)(__v16qu) {
+    static constexpr __m128i v128_pow2_to_pow3 = (__m128i)(__16char) {
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
     };
-    static constexpr __m256i const_pow2_to_pow3 = (__m256i)(__v32qu) {
+    static constexpr __m256i const_pow2_to_pow3 = (__m256i)(__32chars) {
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40,
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
     };
-    static constexpr __m256i const_diag76_masks_lo = (__m256i)(__v8su) {
+    static constexpr __m256i const_diag76_masks_lo = (__m256i)(__8unsigned) {
       // D7
       meta_u32_extractor<1, 4, 9>::and_mask, meta_u32_extractor<6, 4, 7>::and_mask,
       meta_u32_extractor<8, 3, 9>::and_mask, meta_u32_extractor<15, 3, 7>::and_mask,
       // D6
       meta_u32_extractor<2, 4, 9>::and_mask, meta_u32_extractor<5, 4, 7>::and_mask,
       meta_u32_extractor<16, 2, 9>::and_mask, meta_u32_extractor<23, 2, 7>::and_mask};
-    static constexpr __m256i const_diag76_multiplier_lo = (__m256i)(__v8su) {
+    static constexpr __m256i const_diag76_multiplier_lo = (__m256i)(__8unsigned) {
       // D7
       meta_u32_extractor<1, 4, 9>::multiplier, meta_u32_extractor<6, 4, 7>::multiplier,
       meta_u32_extractor<8, 3, 9>::multiplier, meta_u32_extractor<15, 3, 7>::multiplier,
       // D6
       meta_u32_extractor<2, 4, 9>::multiplier, meta_u32_extractor<5, 4, 7>::multiplier,
       meta_u32_extractor<16, 2, 9>::multiplier, meta_u32_extractor<23, 2, 7>::multiplier};
-    static constexpr __m256i const_diag76_shift_lo = (__m256i)(__v8su) {
+    static constexpr __m256i const_diag76_shift_lo = (__m256i)(__8unsigned) {
       // D7
       meta_u32_extractor<1, 4, 9>::shift, meta_u32_extractor<6, 4, 7>::shift,
       meta_u32_extractor<8, 3, 9>::shift, meta_u32_extractor<15, 3, 7>::shift,
@@ -481,7 +484,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
       meta_u32_extractor<16, 2, 9>::shift, meta_u32_extractor<23, 2, 7>::shift};
   
 
-    static constexpr __m256i const_diag76_masks_hi = (__m256i)(__v8su) {
+    static constexpr __m256i const_diag76_masks_hi = (__m256i)(__8unsigned) {
       // D7
       meta_u32_extractor<5, 3, 9>::and_mask, meta_u32_extractor<2, 3, 7>::and_mask,
       meta_u32_extractor<3, 4, 9>::and_mask, meta_u32_extractor<4, 4, 7>::and_mask,
@@ -489,7 +492,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
       meta_u32_extractor<6, 2, 9>::and_mask, meta_u32_extractor<1, 2, 7>::and_mask,
       meta_u32_extractor<2, 4, 9>::and_mask, meta_u32_extractor<5, 4, 7>::and_mask
     };
-    static constexpr __m256i const_diag76_multiplier_hi = (__m256i)(__v8su) {
+    static constexpr __m256i const_diag76_multiplier_hi = (__m256i)(__8unsigned) {
       // D7
       meta_u32_extractor<5, 3, 9>::multiplier, meta_u32_extractor<2, 3, 7>::multiplier,
       meta_u32_extractor<3, 4, 9>::multiplier, meta_u32_extractor<4, 4, 7>::multiplier,
@@ -497,7 +500,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
       meta_u32_extractor<6, 2, 9>::multiplier, meta_u32_extractor<1, 2, 7>::multiplier,
       meta_u32_extractor<2, 4, 9>::multiplier, meta_u32_extractor<5, 4, 7>::multiplier
     };
-    static constexpr __m256i const_diag76_shift_hi = (__m256i)(__v8su) {
+    static constexpr __m256i const_diag76_shift_hi = (__m256i)(__8unsigned) {
       // D7
       meta_u32_extractor<5, 3, 9>::shift, meta_u32_extractor<2, 3, 7>::shift,
       meta_u32_extractor<3, 4, 9>::shift, meta_u32_extractor<4, 4, 7>::shift,
@@ -542,7 +545,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     int mover_hi = static_cast<int>(static_cast<uint32_t>(mover >> 32));
     __m256i vect_mover_hi = _mm256_set_epi32(
       mover_hi, mover_hi, mover_hi, mover_hi, mover_hi, mover_hi, mover_hi, mover_hi);
-    static constexpr __m256i factor_p3_hi = (__m256i)(__v8su) {
+    static constexpr __m256i factor_p3_hi = (__m256i)(__8unsigned) {
       81, 81, 27, 27, 81, 81, 9, 9};
     __m256i d76_mover_diag_hi = 
       _mm256_srlv_epi32(
@@ -581,7 +584,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     __m256i p3_empty = _mm256_add_epi32(p3_empty_diag_lo,  _mm256_mullo_epi32(p3_empty_diag_hi, factor_p3_hi));
     __m256i d67_pattern = _mm256_add_epi32(p3_empty, _mm256_slli_epi32(p3_mover, 1));
 
-    static constexpr __m256i const_d67_offsets_256 = (__m256i)(__v8su){offsetJD7, offsetJD7, offsetJD7, offsetJD7, offsetJD6, offsetJD6, offsetJD6, offsetJD6};
+    static constexpr __m256i const_d67_offsets_256 = (__m256i)(__8unsigned){offsetJD7, offsetJD7, offsetJD7, offsetJD7, offsetJD6, offsetJD6, offsetJD6, offsetJD6};
     __m256i diag_results = _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(d67_pattern, const_d67_offsets_256), 4);
 
     // The 0x2030486ca2f300 multiplier will perform the bit gather +
@@ -619,8 +622,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     const TCoeff* __restrict__ const pR3 = pcoeffs+offsetJR3;
     const TCoeff* __restrict__ const pR4 = pcoeffs+offsetJR4;
 
-
-    static constexpr __m256i const_row_offsets_256 = (__m256i)(__v8su){offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1};
+    static constexpr __m256i const_row_offsets_256 = (__m256i)(__8unsigned){offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1};
     __m256i vect_row_pattern_values_256 = _mm256_add_epi32(diag_results, _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4));
     __m256i vect_interm_256 = _mm256_hadd_epi32(vect_row_pattern_values_256, vect_row_pattern_values_256);
     vect_interm_256 = _mm256_hadd_epi32(vect_interm_256, vect_interm_256);
