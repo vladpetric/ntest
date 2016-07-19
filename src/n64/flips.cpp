@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include "magic.h"
+#include <x86intrin.h>
 
 /**
 * counts[index][moverBitPattern] contains the number of disks flipped in a row.
@@ -30,6 +31,8 @@ static uint8_t insides[8][256];
 * rowFlips[row][insideBitPattern] is the bitboard containing the disks that will be flipped
 */
 u64 rowFlips[8][256];
+
+u64 baseRowFlips[256];
 
 /**
 * colFlips[col][insideBitPattern] is the bitboard containing the disks that will be flipped
@@ -118,6 +121,9 @@ static void initInside(int index, int moverBitPattern) {
 
 static void initRowFlips(int row, u64 insideBitPattern) {
     rowFlips[row][insideBitPattern] = insideBitPattern << (row*8);
+    if (row == 0) {
+        baseRowFlips[insideBitPattern] = insideBitPattern << (row*8);
+    }
 }
 
 static void initColFlips(int col, u64 insideBitPattern) {
@@ -271,28 +277,42 @@ static struct magicFlip flipArray[64] = {
 { 0x2010080402010000ULL,  0x101010101010101ULL,  0x2020202020202020ULL,  0x8102040810204ULL,  0x2040800000000000ULL,  0x101010101010101ULL,  7,  10 },
 { 0x4020100804020100ULL,  0x101010101010101ULL,  0x4040404040404040ULL,  0x4081020408102ULL,  0ULL,  0ULL,  6,  11 },
 { 0x8040201008040201ULL,  0x101010101010101ULL,  0x8080808080808080ULL,  0x2040810204081ULL,  0ULL,  0ULL,  5,  11 }}; 
-
 u64 flips(int sq, u64 mover, u64 enemy) {
-    if (neighbors[sq]&enemy) {
+//    if (neighbors[sq]&enemy) {
         const struct magicFlip &m = flipArray[sq];
-        const int row = sq >> 3;
-        const int col = sq & 7;
+        const u64 row = sq >> 3;
+        const u64 col = sq & 7;
 
         u64 flip=0;
-
-        const int rowIndex = rowFlipIndex(row, col, mover, enemy);
-        flip |= rowFlips[row][rowIndex];
-        const int d9Index = flipIndex(col, mover, enemy, m.d9mask, m.d9mult);
-        flip |= d9Flips[m.d9b][d9Index];
-        const int colIndex = flipIndex(row, mover, enemy, m.colmask, m.colmult);
-        flip |= colFlips[col][colIndex];
-        const int d7Index = flipIndex(col, mover, enemy, m.d7mask, m.d7mult);
-        flip |= d7Flips[m.d7b][d7Index];
+        {
+            const auto shift = row * 8;
+            const auto enemy256 = (enemy>>shift)&0xFF;
+            const auto flipIndex = insides[col][(mover>>shift)&outsides[col][enemy256]];
+            flip |= baseRowFlips[flipIndex] << shift;
+        }
+        {
+            const auto enemy256_extr = _pext_u64(enemy, m.d9mask);
+            const auto mover256_extr = _pext_u64(mover, m.d9mask);
+            const auto pos = std::min(row, col);
+            flip |= _pdep_u64(baseRowFlips[insides[pos][mover256_extr&outsides[pos][enemy256_extr]]], m.d9mask);
+        }
+        {
+            const auto colmask = 0x0101010101010101ULL << col;
+            const auto enemy256_extr = _pext_u64(enemy, colmask);
+            const auto mover256_extr = _pext_u64(mover, colmask);
+            flip |= _pdep_u64(baseRowFlips[insides[row][mover256_extr&outsides[row][enemy256_extr]]], colmask);
+        }
+        {
+            const auto enemy256_extr = _pext_u64(enemy, m.d7mask);
+            const auto mover256_extr = _pext_u64(mover, m.d7mask);
+            const auto pos = std::min(row, 7 - col);
+            flip |= _pdep_u64(baseRowFlips[insides[pos][mover256_extr&outsides[pos][enemy256_extr]]], m.d7mask);
+        }
 
         return flip;
-    } else {
-        return 0;
-    }
+//    } else {
+//        return 0;
+//    }
 }
 
 
