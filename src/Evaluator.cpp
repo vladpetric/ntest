@@ -441,6 +441,16 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     value += pD8[Diag8B]; 
 #undef BB_EXTRACT_STEP_PATTERN
 
+    static constexpr __m128i v128_low_nibble = (__m128i)(__v16qu) {
+      0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf
+    };
+    static constexpr __m128i v128_high_nibble = (__m128i)(__v16qu) {
+      0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0
+    };
+    static constexpr __m128i v128_81 = (__m128i)(__v8hu) {
+      81, 81, 81, 81, 81, 81, 81, 81
+    };
+
     static constexpr __m128i v128_pow2_to_pow3 = (__m128i)(__v16qu) {
       0, 1, 3, 4, 9, 10, 12, 13, 27, 28, 30, 31, 36, 37, 39, 40
     };
@@ -496,6 +506,28 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
       meta_u32_extractor<2, 4, 9>::shift, meta_u32_extractor<5, 4, 7>::shift
     };
 
+    __m128i v128_zero = _mm_setzero_si128();
+    __m128i vect_mover = _mm_set_epi64x(0, mover);
+    __m128i unpack_mover = _mm_unpacklo_epi8(vect_mover, v128_zero);
+    __m128i vect_p3_mover_lonib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_and_si128(unpack_mover, v128_low_nibble)); 
+    __m128i vect_p3_mover_hinib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_mover, v128_high_nibble), 4));
+    __m128i vect_p3_mover = _mm_add_epi16(vect_p3_mover_lonib,  _mm_mullo_epi16(vect_p3_mover_hinib, v128_81));
+    __m128i vect_empty = _mm_set_epi64x(0, empty);
+    __m128i unpack_empty = _mm_unpacklo_epi8(vect_empty, v128_zero);
+    __m128i vect_p3_empty_lonib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_and_si128(unpack_empty, v128_low_nibble)); 
+    __m128i vect_p3_empty_hinib =
+      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_empty, v128_high_nibble), 4));
+    __m128i vect_p3_empty = _mm_add_epi16(vect_p3_empty_lonib,  _mm_mullo_epi16(vect_p3_empty_hinib, v128_81));
+    __m256i vect_pattern = _mm256_cvtepi16_epi32(_mm_add_epi16(vect_p3_empty, _mm_slli_epi32(vect_p3_mover, 1)));
+    
+    TConfig Row0 = _mm256_extract_epi32(vect_pattern, 0);
+    TConfig Row1 = _mm256_extract_epi32(vect_pattern, 1);
+    TConfig Row2 = _mm256_extract_epi32(vect_pattern, 2);
+    TConfig Row3 = _mm256_extract_epi32(vect_pattern, 3);
+    value += ValueTrianglePatternsJ(pcoeffs, Row0, Row1, Row2, Row3);
     int mover_lo = static_cast<int>(static_cast<uint32_t>(mover));
     __m256i vect_mover_lo = _mm256_set_epi32(
       mover_lo, mover_lo, mover_lo, mover_lo, mover_lo, mover_lo, mover_lo, mover_lo);
@@ -587,33 +619,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     const TCoeff* __restrict__ const pR3 = pcoeffs+offsetJR3;
     const TCoeff* __restrict__ const pR4 = pcoeffs+offsetJR4;
 
-    static constexpr __m128i v128_low_nibble = (__m128i)(__v16qu) {
-      0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf
-    };
-    static constexpr __m128i v128_high_nibble = (__m128i)(__v16qu) {
-      0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0
-    };
-    static constexpr __m128i v128_81 = (__m128i)(__v8hu) {
-      81, 81, 81, 81, 81, 81, 81, 81
-    };
 
-    __m128i v128_zero = _mm_setzero_si128();
-    __m128i vect_mover = _mm_set_epi64x(0, mover);
-    __m128i unpack_mover = _mm_unpacklo_epi8(vect_mover, v128_zero);
-    __m128i vect_p3_mover_lonib =
-      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_and_si128(unpack_mover, v128_low_nibble)); 
-    __m128i vect_p3_mover_hinib =
-      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_mover, v128_high_nibble), 4));
-    __m128i vect_p3_mover = _mm_add_epi16(vect_p3_mover_lonib,  _mm_mullo_epi16(vect_p3_mover_hinib, v128_81));
-    __m128i vect_empty = _mm_set_epi64x(0, empty);
-    __m128i unpack_empty = _mm_unpacklo_epi8(vect_empty, v128_zero);
-    __m128i vect_p3_empty_lonib =
-      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_and_si128(unpack_empty, v128_low_nibble)); 
-    __m128i vect_p3_empty_hinib =
-      _mm_shuffle_epi8(v128_pow2_to_pow3, _mm_srli_epi16(_mm_and_si128(unpack_empty, v128_high_nibble), 4));
-    __m128i vect_p3_empty = _mm_add_epi16(vect_p3_empty_lonib,  _mm_mullo_epi16(vect_p3_empty_hinib, v128_81));
-    __m256i vect_pattern = _mm256_cvtepi16_epi32(_mm_add_epi16(vect_p3_empty, _mm_slli_epi32(vect_p3_mover, 1)));
-    
     static constexpr __m256i const_row_offsets_256 = (__m256i)(__v8su){offsetJR1, offsetJR2, offsetJR3, offsetJR4, offsetJR4, offsetJR3, offsetJR2, offsetJR1};
     __m256i vect_row_pattern_values_256 = _mm256_add_epi32(diag_results, _mm256_i32gather_epi32(pcoeffs, _mm256_add_epi32(vect_pattern, const_row_offsets_256), 4));
     __m256i vect_interm_256 = _mm256_hadd_epi32(vect_row_pattern_values_256, vect_row_pattern_values_256);
@@ -621,24 +627,11 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, bool fBlac
     value += _mm256_extract_epi32(vect_interm_256, 0);
     value += _mm256_extract_epi32(vect_interm_256, 4);
     
-    static constexpr __m256i const_triangle_offsets_256 = (__m256i)(__v8su){0, 6561, 2 * 6561, 3 * 6561, 3 * 6561, 2 * 6561, 6561, 0};
-    __m256i vect_triangle_rows_256 = _mm256_i32gather_epi32(reinterpret_cast<const int *>(fourRowsToTriangle),
-                                                            _mm256_add_epi32(vect_pattern, const_triangle_offsets_256), 4);
-    
-    vect_interm_256 = _mm256_hadd_epi32(vect_triangle_rows_256, vect_triangle_rows_256);
-    vect_interm_256 = _mm256_hadd_epi32(vect_interm_256, vect_interm_256);
-    u4 configs_triangle = _mm256_extract_epi32(vect_interm_256, 0);
-    value += ConfigPMValue(pcoeffs, configs_triangle&0xFFFF, C4J, offsetJTriangle);
-    value += ConfigPMValue(pcoeffs, configs_triangle>>16,    C4J, offsetJTriangle);
-    configs_triangle = _mm256_extract_epi32(vect_interm_256, 4);
-    value += ConfigPMValue(pcoeffs, configs_triangle&0xFFFF, C4J, offsetJTriangle);
-    value += ConfigPMValue(pcoeffs, configs_triangle>>16,    C4J, offsetJTriangle);
-    
-    TConfig Row0 = _mm256_extract_epi32(vect_pattern, 0);
-    TConfig Row1 = _mm256_extract_epi32(vect_pattern, 1);
+    TConfig Row4 = _mm256_extract_epi32(vect_pattern, 4);
+    TConfig Row5 = _mm256_extract_epi32(vect_pattern, 5);
     TConfig Row6 = _mm256_extract_epi32(vect_pattern, 6);
     TConfig Row7 = _mm256_extract_epi32(vect_pattern, 7);
-    
+    value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
     TConfig valueEdge = ValueEdgePatternsJ(pcoeffs, Row0, Row1) + ValueEdgePatternsJ(pcoeffs, Row7, Row6);
    
 #define BB_EXTRACT_FLIPPED_ROW_PATTERN(ROW) \
