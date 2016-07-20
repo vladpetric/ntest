@@ -6,7 +6,7 @@
 # Akro build is a C++ build system with automated dependency tracking.
 # See the README file for a detailed description.
 #
-# Akro build is inspired from Maxim Trokhimtchouk's autobuild
+# Akro build is inspired by Maxim Trokhimtchouk's autobuild
 # https://github.com/petver29/autobuild
 #
 # Although it borrows many ideas from autobuild, it is a from-scratch, clean-room
