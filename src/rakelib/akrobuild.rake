@@ -1,3 +1,17 @@
+# Copyright 2016 Vlad Petric
+# All rights reserved
+# This file is distributed subject to GNU GPL version 3. See the files
+# GPLv3.txt and License.txt in the instructions subdirectory for details.
+
+# Akro build is a C++ build system with automated dependency tracking.
+# See the README file for a detailed description.
+#
+# Akro build is inspired from Maxim Trokhimtchouk's autobuild
+# https://github.com/petver29/autobuild
+#
+# Although it borrows many ideas from autobuild, it is a from-scratch, clean-room
+# implementation.
+
 $AKRO_VERBOSE = $VERBOSE_BUILD.nil? ? false : $VERBOSE_BUILD
 $AKRO_COMPILER_PREFIX = $COMPILER_PREFIX.nil? ? "" : $COMPILER_PREFIX + " "
 $AKRO_COMPILER = $COMPILER.nil? ? "g++" : $COMPILER
