@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <iostream>
 
 //! Abstract interface for a stream to write information (FILE* or memory)
 class Writer {
@@ -126,31 +127,31 @@ public:
 
 class MemoryWriter : public Writer {
 private:
-	std::vector<char>& m_bytes;
+	std::vector<signed char>& m_bytes;
 
 public:
-	MemoryWriter(std::vector<char>& bytes) : m_bytes(bytes) {};
+	MemoryWriter(std::vector<signed char>& bytes) : m_bytes(bytes) {};
 
 	size_t write(const void* data, size_t size, size_t count);
 };
 
 class MemoryReader : public Reader {
 private:
-	std::vector<char>& m_bytes;
+	std::vector<signed char>& m_bytes;
 	size_t readLoc;
 
 public:
-	MemoryReader(std::vector<char>& bytes) : m_bytes(bytes), readLoc(0) {};
+	MemoryReader(std::vector<signed char>& bytes) : m_bytes(bytes), readLoc(0) {};
 
 	size_t read(void* data, size_t size, size_t count);
 };
 
 class MemoryStore : public Store {
 private:
-	std::vector<char>& m_bytes;	//!< Not owned by the store! Somebody else has to delete it.
+	std::vector<signed char>& m_bytes;	//!< Not owned by the store! Somebody else has to delete it.
 
 public:
-	MemoryStore(std::vector<char>& bytes) : m_bytes(bytes) {};
+	MemoryStore(std::vector<signed char>& bytes) : m_bytes(bytes) {};
 
 	std::unique_ptr<Reader> getReader() {
 		return std::unique_ptr<Reader>(new MemoryReader(m_bytes));
@@ -162,6 +163,14 @@ public:
 
 	std::string ToString() {
 		return "Memory Store";
+	}
+	
+	void Print() const {
+		std::cout << "char[] fileBytes = {";
+		for (std::vector<signed char>::iterator it = m_bytes.begin(); it != m_bytes.end(); ++it) {
+			std::cout << (short)(*it) << ", ";
+		}
+		std::cout << "};\n";
 	}
 };
 

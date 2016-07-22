@@ -634,10 +634,14 @@ void CBook::ReadVersion1(Reader& in) {
             entries[nEmpty][board]=bd;
         }
         else {
+            std::cerr << "\nBook error at entry #" << nRead << ": Board with " << nEmpty << " empties detected\n";
+            board.Print(true);
+            std::cerr << bd << "\n";
             ReadErr();
         }
     }
     if (nRead!=nSize) {
+        std::cerr << "Book is corrupt, expected size = " << nRead << ", actual size = " << nSize << " entries\n";
         ReadErr();
     }
     ReadAndCheckHash(in);
@@ -666,7 +670,7 @@ private:
 
     enum { kWldSolved=1, kRoot=2, kWld=4, kKnownSolve=8 };
     u2 flags; //!< packed value containing sum of enum flags plus (height<<4)+(iPrune<<10)
-    u2 v;
+	i2 v;
 };
 
 CBookDataCompressed::CBookDataCompressed(const CBookData& bd) {
