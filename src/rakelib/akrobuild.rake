@@ -293,3 +293,14 @@ task :clean do
   FileUtils::rm_rf(".akro/")
   $MODES.each{|mode| FileUtils::rm_rf("#{mode}/")}
 end
+
+# Do we have $BINARIES defined? If yes, set up default tasks for each mode.
+if !$BINARIES.nil? then
+  $MODES.each do |mode|
+    task mode => $BINARIES.map{|bin| raise "Binary #{bin} does not end in .exe" if !bin.end_with?(".exe");  "#{mode}/#{bin}"}
+  end
+  task "default" => $MODES
+  task :bin_list do
+    $BINARIES.each{|bin| puts "#{bin}"}
+  end
+end
