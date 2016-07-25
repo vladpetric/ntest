@@ -10,10 +10,11 @@ static const bool printTestDebug = false;
 static std::ostream* const s_out = printTestDebug ? &std::cerr : NULL;
 
 //! Write the book to a Store and read it in again. Make sure that the new book is the same as the old book.
-void CBook::TestMyIO() {
+//! @param contents expected file contents, or NULL to not check the expected file contents.
+void CBook::TestMyIO(std::vector<signed char>* contents) {
 	NegamaxAll();
 
-	std::vector<char> bytes;
+	std::vector<signed char> bytes;
 	std::unique_ptr<Store> store(new MemoryStore(bytes));
 	std::unique_ptr<Writer> out = store->getWriter();
 	WriteVersion2(*out);
@@ -60,6 +61,20 @@ void CBook::TestIO() {
 		pos.MakeMove(CMove(045));
 		book.StoreLeaf(pos.BitBoard(), CHeightInfoX(10, 4, false, 59), -32);
 		book.TestMyIO();
+	}
+	{
+		// test book with two entries in a tree with a cutoff
+		CBook book(NULL, s_out);
+		CQPosition pos;
+		pos.Initialize();
+		pos.MakeMove(CMove(045));
+
+		book.StoreRoot(pos.BitBoard(), CHeightInfoX(10, 4, false, 60), 32, -400);
+		pos.MakeMove(CMove(053));
+		book.StoreLeaf(pos.BitBoard(), CHeightInfoX(10, 4, false, 59), -32);
+		signed char fileBytes[] = {2, 0, 0, 0, 2, 0, 0, 0, -1, -1, -1, -25, -25, -17, -1, -1, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, -94, 16, 112, -2, 29, 0, 0, 0, 0, -96, 16, -32, -1, -1, -1, -31, 63, 63, -79};
+		std::vector<signed char> contents(fileBytes, fileBytes + sizeof(fileBytes));
+		book.TestMyIO(&contents);
 	}
 }
 
@@ -393,24 +408,24 @@ extern void HashInit();
 extern void HashChunk(const void* p, size_t size);
 extern u4 hash_a;
 
-static void TestHash(char* bytes, int length, u4 expected) {
+static void TestHash(signed char* bytes, int length, u4 expected) {
 	HashInit();
 	HashChunk(bytes, length);
 	TEST(hash_a == expected);
 }
 
 static void TestHash4() {
-	char bytes[] = {1,2,3,4};
+	signed char bytes[] = {1,2,3,4};
 	TestHash(bytes, 4, 67305985);
 }
 
 static void TestHash8() {
-	char bytes[] = {1,2,3,4, 5, 6, 7, 8};
+	signed char bytes[] = {1,2,3,4, 5, 6, 7, 8};
 	TestHash(bytes, 8, 67305985);
 }
 
 static void TestHash12() {
-	char bytes[] = {1,2,3,4,5,6,7,8,9,10,11,12};
+	signed char bytes[] = {1,2,3,4,5,6,7,8,9,10,11,12};
 	TestHash(bytes, 12, 2648134205);
 }
 

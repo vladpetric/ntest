@@ -5,6 +5,7 @@ project(ntest)
 if (CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     add_definitions(-pthread -D_M_AMD64 -m64 -msse4 -std=c++1y -O3 -g3 -Wno-unused-result -Wno-deprecated)
     set(CMAKE_CXX_LINK_FLAGS "-pthread -m64 -msse4 -std=c++1y -O3 -g3")
+    find_package(Threads REQUIRED)
     if("${NTEST_MINGW_BUILD}")
         add_definitions(-static-libgcc -static-libstdc++)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -static-libgcc -static-libstdc++")
@@ -54,12 +55,6 @@ target_link_libraries(allpos mainlib core game patterns odk n64)
 add_test(ntest_basic ntest o)
 
 if(${UNIX})
-    EXEC_PROGRAM(ln ARGS -sf "${CMAKE_SOURCE_DIR}/../resource/coefficients"
-                 "${CMAKE_BINARY_DIR}")
-    EXEC_PROGRAM(ln ARGS -sf "${CMAKE_SOURCE_DIR}/../resource/TestGames.ggf"
-                 "${CMAKE_BINARY_DIR}")
-    EXEC_PROGRAM(ln ARGS -sf "${CMAKE_SOURCE_DIR}/../resource"
-                 "${CMAKE_BINARY_DIR}")
-    EXEC_PROGRAM(ln ARGS -sf "${CMAKE_SOURCE_DIR}/../resource/parameters.txt"
+    EXEC_PROGRAM(ln ARGS -sf "../src/resource/*"
                  "${CMAKE_BINARY_DIR}")
 endif()

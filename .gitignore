@@ -14,6 +14,7 @@
 float coefficients.zip
 [Bb]uildLog.htm
 *.exe
+draws.txt
 
 # CMake files
 *.cmake
@@ -94,9 +95,11 @@ packages/
 
 #Test files
 *.testsettings
-/winbuild
-/build-*
-/build
+/winbuild/
+/build-*/
+/build/
+/run
+
 # Python stuf
 /extras/dis/basic_asm.py
 /extras/dis/basic_asm.pyc
