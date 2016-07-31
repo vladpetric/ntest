@@ -24,7 +24,7 @@ using namespace std;
 // CComputerDefaults
 ////////////////////////////////////////
 
-CComputerDefaults::CComputerDefaults() : sCalcParams("s26"), cEval('J'), cCoeffSet('A')
+CComputerDefaults::CComputerDefaults() : sCalcParams("s12"), cEval('J'), cCoeffSet('A')
 , iPruneEndgame(5), iPruneMidgame(4), iEdmund(1), booklevel(kNegamaxBook) {
 	vContempts[0]=0;
 	vContempts[1]=0;
@@ -108,16 +108,7 @@ CPlayerComputer::CPlayerComputer(const CComputerDefaults& acd) {
 	pcp->Name(osName);
 	m_sName=osName.str();
 
-	// Set up MPC widths
-	if (mpcs) {
-    /*
-		int iPruneMax=cd.iPruneMidgame;
-		if (cd.iPruneEndgame>cd.iPruneMidgame)
-			iPruneMax=cd.iPruneEndgame;
-    */
-	}
-	else
-		cd.iPruneMidgame=cd.iPruneEndgame=0;
+	if (!mpcs) cd.iPruneMidgame=cd.iPruneEndgame=0;
 
 
 	std::cout << "status Negamaxing book" << std::endl;

@@ -6,7 +6,7 @@ if system =~ /Linux/
     $COMPILER = "clang++-3.8"
     $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror"
   elsif machine =~ /^x86/ || machine =~ /^amd64/
-    $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I."
+    $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -Werror -msse4.2 -I."
   else
     puts "Unknown machine #{machine}"
   end
