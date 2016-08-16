@@ -2,7 +2,7 @@
 #include "Store.h"
 
 void TestStore() {
-	std::vector<char> bytes;
+	std::vector<signed char> bytes;
 
 	MemoryStore store(bytes);
 
