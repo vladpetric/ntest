@@ -1,3 +1,5 @@
+$COMPILER_PREFIX = "ccache" if system("ccache --version", [:out, :err] => '/dev/null')
+akro_multitask()
 system = `uname -s`
 machine = `uname -m`
 if system =~ /Linux/
