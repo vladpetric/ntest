@@ -20,7 +20,8 @@
 
 using namespace std;
 
-u4 nEvalsQuick=0, nSNodesQuick=0;
+u4 nEvalsQuick=0;
+extern u4 nSNodesQuick;
 double nEvals=0, nSNodes=0, nINodes=0, nKFlips=0, nBBFlips=0;
 
 bool abortRound;

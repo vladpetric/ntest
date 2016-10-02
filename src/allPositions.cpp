@@ -83,6 +83,8 @@ void AllPositions() {
     cout << "Move: " << step << " ply count " << current->size() << endl;
 }
 
+bool HasInput() { return false; }
+
 int main(int argc, char **argv) {
     InitFastFlip();
     initFlips();

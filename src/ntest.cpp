@@ -9,7 +9,7 @@
 #pragma warning(disable: 4786)
 #endif
 
-#include <time.h>
+#include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>

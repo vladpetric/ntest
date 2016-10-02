@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <cassert>
-#include "n64/bitextractor.h"
-#include "n64/extract_and_convert.hpp"
+#include "bitextractor.h"
+#include "extract_and_convert.hpp"
 #include "test.h"
 
 template <unsigned start, unsigned count, unsigned step>

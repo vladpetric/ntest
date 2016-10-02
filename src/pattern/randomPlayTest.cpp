@@ -11,6 +11,8 @@
 #include "../pattern/Patterns.h"
 #include "../pattern/Stable.h"
 #include "../n64/test.h"
+#include "../n64/flips.h"
+
 #include "randomPlayTest.h"
 
 using namespace std;
@@ -132,7 +134,6 @@ CBitBoard performMove(const CBitBoard bb, const DirectionalMask &mask, uint64_t 
 
     for (int dir = 0; dir < 8; ++dir) {
         uint64_t mover = bb.mover;
-        uint64_t enemy = bb.getEnemy();
         uint64_t sweep = mask.directional_mask[dir] & move;
         if (sweep) {
             r.mover |= sweep;
@@ -262,7 +263,7 @@ void RandomGameTester() {
             
 
             if (finalFlipCount != -1) {
-                assertTrue(bitCount(flip) == finalFlipCount);
+                assertTrue(bitCount(flip) == static_cast<unsigned>(finalFlipCount));
             }
 
             assertTrue(bb.mover == simplebb.mover);

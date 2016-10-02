@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "search.h"
 
-extern u4 nSNodesQuick;
+u4 nSNodesQuick = 0;
 
 #define NODE nSNodesQuick++
 
