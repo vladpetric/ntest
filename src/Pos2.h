@@ -12,6 +12,7 @@
 #include <vector>
 #include "n64/utils.h"
 #include "core/Moves.h"
+#include "core/BitBoard.h"
 #include "pattern/patternJ.h"
 #include "Stable.hpp"
 

@@ -1,21 +1,29 @@
-$COMPILER_PREFIX = "ccache" if system("ccache --version", [:out, :err] => '/dev/null')
-akro_multitask()
-system = `uname -s`
-machine = `uname -m`
-if system =~ /Linux/
-  if machine =~ /^arm/
-    $COMPILER = "clang++-3.8"
-    $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror"
-  elsif machine =~ /^x86/ || machine =~ /^amd64/
-    $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -Werror -msse4.2 -I."
-  else
-    puts "Unknown machine #{machine}"
-  end
-elsif system =~ /Mac OS/ || system =~ /Darwin/
-  $COMPILER = "clang++"
-  $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I. -stdlib=libc++"
+if Gem.win_platform?
+  # Need to have mingw-x64 installed
+  $COMPILER = "g++"
+  $COMPILE_FLAGS = "-m64 -std=c++1y -pthread -Wall -msse4.2 -I."
+  $ADDITIONAL_LINK_FLAGS = "-lws2_32"
 else
-  puts "Unknown system #{system}"
+  akro_multitask()
+  $COMPILER_PREFIX = "ccache" if system("ccache --version", [:out, :err] => '/dev/null')
+  system = `uname -s`
+  machine = `uname -m`
+
+  if system =~ /Linux/
+    if machine =~ /^arm/
+      $COMPILER = "clang++-3.8"
+      $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror"
+    elsif machine =~ /^x86/ || machine =~ /^amd64/
+      $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -Werror -msse4.2 -I."
+    else
+      puts "Unknown machine #{machine}"
+    end
+  elsif system =~ /Mac OS/ || system =~ /Darwin/
+    $COMPILER = "clang++"
+    $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -I. -stdlib=libc++"
+  else
+    puts "Unknown system #{system}"
+  end
 end
 add_binaries("bookconv.exe", "allPositions.exe", "bookplay.exe", "n64/bitExtractTestMain.exe", "ntest.exe", "randomEvalGen.exe", "pattern/randomPlayMain.exe")
 add_test(name: "ntest_basic", binary: "ntest.exe", cmdline: "t")

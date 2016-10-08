@@ -7,7 +7,6 @@
 #include "core/Cache.h"
 #include "core/options.h"
 #include "core/MPCStats.h"
-#include "core/ThreadSafeCache.h"
 
 #include "TreeDebug.h"
 #include "Search.h"
