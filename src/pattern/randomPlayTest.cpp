@@ -9,7 +9,7 @@
 #include "../core/BitBoard.h"
 #include "../core/Moves.h"
 #include "../pattern/Patterns.h"
-#include "../pattern/Stable.h"
+#include "Stable.hpp"
 #include "../n64/test.h"
 #include "../n64/flips.h"
 
@@ -201,7 +201,7 @@ void RandomGameTester() {
             }
 
             // Check stable discs.
-            uint64_t stable_mask = full_stable(bb.mover, bb.getEnemy());
+            uint64_t stable_mask = stable_discs(bb.mover, bb.getEnemy(), bb.empty);
             uint64_t all_pieces_mask = bb.mover | bb.getEnemy();
             
             assert ((stable_mask & all_pieces_mask) == stable_mask);
@@ -210,7 +210,7 @@ void RandomGameTester() {
             const uint64_t flip = flips(sq, bb.mover, bb.getEnemy());
             const uint64_t squareMask = mask(sq);
             if (((flip|squareMask) & stable_mask) != 0) {
-                stable_mask = full_stable(bb.mover, bb.getEnemy());
+                stable_mask = stable_discs(bb.mover, bb.getEnemy(), bb.empty);
                 if (blackMove) {
                     fprintf(stdout, "Black To Move\n");
                 } else {
@@ -235,7 +235,7 @@ void RandomGameTester() {
                     }
                     fprintf(stdout, "%2d\n",row+1);
                 }
-                stable_mask = edge_stable(bb.mover, bb.getEnemy());
+                stable_mask = stable_discs(bb.mover, bb.getEnemy(), bb.empty);
                 fprintf(stdout, "\n");
                 for (row=0; row<8; row++) {
                     fprintf(stdout, "%2d ",row+1);
@@ -257,7 +257,7 @@ void RandomGameTester() {
             bb.mover ^= (flip|squareMask);
             bb.empty ^= squareMask;
             
-            uint64_t new_stable_mask = full_stable(bb.mover, bb.getEnemy());
+            uint64_t new_stable_mask = stable_discs(bb.mover, bb.getEnemy(), bb.empty);
             assert((stable_mask & new_stable_mask) == stable_mask);
             assert((stable_mask | new_stable_mask) == new_stable_mask);
             

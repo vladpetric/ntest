@@ -8,6 +8,17 @@
 #include <string>
 #include <iostream>
 
+class IOException {
+public:
+	const std::string m_description;
+	const std::string m_filename;
+	const int m_errno;
+
+	IOException(const std::string& description, const std::string& filename, int errorNumber) : m_description(description), m_filename(filename), m_errno(errorNumber) {};
+	IOException(const char* description, const std::string& filename, int errorNumber) : m_description(description), m_filename(filename), m_errno(errorNumber) {};
+	bool IsFileNotFound() { return m_errno == ENOENT; };
+};
+
 //! Abstract interface for a stream to write information (FILE* or memory)
 class Writer {
 public:
@@ -20,7 +31,7 @@ public:
 
 	//! Close the writer
 	//! \throw IOException if unable to write to the file
-	virtual ~Writer() {};
+	virtual ~Writer() throw(IOException) {};
 };
 
 //! Abstract interface for a stream to read information (FILE* or memory)
@@ -32,18 +43,7 @@ public:
 	//! @param count - number of data elements to read
 	//! @return number of data elements read. If this differs from count, there was an error.
 	virtual size_t read(void* data, size_t size, size_t count) = 0;
-	virtual ~Reader() {};
-};
-
-class IOException {
-public:
-	const std::string m_description;
-	const std::string m_filename;
-	const int m_errno;
-
-	IOException(const std::string& description, const std::string& filename, int errorNumber) : m_description(description), m_filename(filename), m_errno(errorNumber) {};
-	IOException(const char* description, const std::string& filename, int errorNumber) : m_description(description), m_filename(filename), m_errno(errorNumber) {};
-	bool IsFileNotFound() { return m_errno == ENOENT; };
+	virtual ~Reader() throw (IOException) {};
 };
 
 //! Abstract interface for a place to store and retrieve information (File or Memory)
@@ -71,13 +71,13 @@ protected:
 public:
 	const std::string m_path;
 
-	FileIo(const std::string& path, bool forReading);
-    FileIo(FILE* fpt): fp(fpt) {}
+  FileIo(const std::string& path, bool forReading) throw(IOException);
+  FileIo(FILE* fpt): fp(fpt) {}
 	size_t write(const void* data, size_t size, size_t count) {
 		return fwrite(data, size, count, fp);
 	}
 
-	virtual ~FileIo();
+	virtual ~FileIo() throw(IOException);
 };
 
 class FileWriter : public Writer {
@@ -88,7 +88,7 @@ private:
 
 public:
 	FileWriter(const std::string& path);
-	~FileWriter();
+	~FileWriter() throw(IOException);
 
 	size_t write(const void* data, size_t size, size_t count) {
 		return m_file->write(data, size, count);
@@ -97,11 +97,12 @@ public:
 
 class FileReader : public FileIo, public Reader {
 public:
-	FileReader(const std::string& path) : FileIo(path, true) {};
+	FileReader(const std::string& path) throw(IOException): FileIo(path, true) {};
 
 	size_t read(void* data, size_t size, size_t count) {
 		return fread(data, size, count, fp);
 	}
+  ~FileReader() throw (IOException) {}
 };
 
 class File : public Store {

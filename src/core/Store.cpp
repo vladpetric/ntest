@@ -7,7 +7,7 @@
 #include "Store.h"
 #include <sstream>
 
-FileIo::FileIo(const std::string& path, bool forReading) : m_path(path) {
+FileIo::FileIo(const std::string& path, bool forReading) throw(IOException) : m_path(path) {
 	const char* mode = forReading ? "rb" : "wb";
 	fp = fopen(path.c_str(), mode);
 	if (fp==NULL) {
@@ -15,7 +15,7 @@ FileIo::FileIo(const std::string& path, bool forReading) : m_path(path) {
 	}
 }
 
-FileIo::~FileIo() {
+FileIo::~FileIo() throw(IOException) {
 	if (fp==NULL) {
 		throw IOException("File is not open", "", -1);
 	}
@@ -53,7 +53,7 @@ FileWriter::FileWriter(const std::string& path) : m_permanentPath(path)
 	, m_file(new FileIo(m_tempPath, false)) {
 }
 
-FileWriter::~FileWriter() {
+FileWriter::~FileWriter() throw(IOException) {
 	m_file.reset(0);
 #ifdef _WIN32
 	if (!MoveFileExA(m_tempPath.c_str(), m_permanentPath.c_str(), MOVEFILE_REPLACE_EXISTING)) {
