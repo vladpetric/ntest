@@ -112,7 +112,7 @@ void InitFFBonus() {
 CValue StaticValue(Pos2& pos2, int iff) {
     int pass;
     u4 nMovesPlayer, nMovesOpponent;
-    CValue result;
+    CValue result = 0;
     assert(evaluator);
     nEvalsQuick++;
 

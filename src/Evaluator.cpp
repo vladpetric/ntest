@@ -45,7 +45,7 @@ CEvaluatorList::~CEvaluatorList() {
 
 CEvaluator* CEvaluator::FindEvaluator(char evaluatorType, char coeffSet) {
 	CEvaluatorInfo evaluatorInfo;
-	CEvaluator* result;
+	CEvaluator* result = nullptr;
 	map<CEvaluatorInfo, CEvaluator*>::iterator ptr;
 
 	evaluatorInfo.evaluatorType=evaluatorType;

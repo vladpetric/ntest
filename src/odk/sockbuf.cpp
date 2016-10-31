@@ -133,7 +133,7 @@ bool sockbuf::IsConnected() const {
 }
 
 int sockbuf::underflow() {
-	char* p0;
+	char* p0 = nullptr;
 	int nGetSize;
 
 	if (!fConnected || err)
