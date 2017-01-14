@@ -1,4 +1,4 @@
 load 'rakefile'
 $COMPILER = "/usr/bin/x86_64-w64-mingw32-g++-posix"
-$COMPILE_FLAGS = "-static -m64 -std=c++1y -Wall -msse4.2 -I."
+$COMPILE_FLAGS = "-static -m64 -std=c++1y -Wall -msse4.2 -I. -flto"
 $ADDITIONAL_LINK_FLAGS = "-lws2_32"

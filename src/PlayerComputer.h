@@ -53,6 +53,7 @@ public:
 
 	//CPlayerComputer(char anEval, char aCoeffSet, CCalcParams* pcp, int iPrune, bool fBook=true, bool fCNABook=true);
 	CPlayerComputer(const CComputerDefaults& acd);
+    CPlayerComputer() {}
 	~CPlayerComputer();
 
 	// game playing
@@ -87,6 +88,6 @@ protected:
 	void SetParameters(bool fUseBook, int iCache);
 	void SetupBook(bool fCNABook);
 	static int DefaultRandomness();
-	CCache* GetCache(int iCache);
+	virtual CCache* GetCache(int iCache);
 	CQPosition posCached[2];
 };
