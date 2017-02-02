@@ -182,7 +182,7 @@ void CCacheData::Clear() {
 	// store an impossible position to prevent collisions
 	board.SetImpossible();
 	// make stale to allow overwrites
-	SetStale();
+	SetStale(0);
 	// set other stuff to 0 for debugging purposes
 	height=iPrune=nEmpty=iFastestFirst=0;
 	lBound=uBound=0;
@@ -193,16 +193,15 @@ void CCacheData::Initialize(const CBitBoard& aBoard, int aheight, int aPrune, in
 	height=aheight;
 	iPrune=aPrune;
 	nEmpty=vnEmpty;
-	fStale=false;
 	lBound=-kInfinity;
 	uBound= kInfinity;
 	bestMove.Set(-1);
 	iFastestFirst=0;
 }
 
-void CCacheData::Print(bool blackMove) const {
+void CCacheData::Print(bool blackMove, u1 count) const {
 	board.Print(blackMove);
-	printf(fStale?"stale ":"nonstale ");
+	printf(isStale(count)?"stale ":"nonstale ");
 	OutData(cout);
 }
 
@@ -243,11 +242,7 @@ int CCache::CopyData(const CCache& cache2) {
 }
 
 void CCache::SetStale() {
-	unsigned int i;
-
-	//cout << "+++ ";
-	for (i=0; i<nBuckets; i++)
-		buckets[i].SetStale();
+  staleCount += 1;
 }
 
 void CCache::PrintStats() const {
@@ -270,11 +265,11 @@ CCacheData* CCache::FindOld(const CBitBoard& board, u64 hash) {
 
 	// is this position in cache?
 	if (result->board==board) {
-		result->SetStale(false);
+		result->SetStale(staleCount);
 	}
 	else if (result2->board==board) {
 		result=result2;
-		result->SetStale(false);
+		result->SetStale(staleCount);
 	}
 	else
 		result=0;
@@ -293,18 +288,18 @@ CCacheData* CCache::FindNew(const CBitBoard& board, u64 hash, int height, int aP
 
 	// is this position in cache?
 	if (result->board==board) {
-		result->SetStale(false);
+		result->SetStale(staleCount);
 	}
 	else if (result2->board==board) {
 		result=result2;
-		result->SetStale(false);
+		result->SetStale(staleCount);
 	}
 
 	// This position isn't the one in the cache...
-	else if (result->fStale || result->Replaceable(height, aPrune, anEmpty)) {
+	else if (result->isStale(staleCount) || result->Replaceable(height, aPrune, anEmpty)) {
 		result->Initialize(board, height, aPrune, anEmpty);
 	}
-	else if (result2->fStale || result2->Replaceable(height, aPrune, anEmpty)) {
+	else if (result2->isStale(staleCount) || result2->Replaceable(height, aPrune, anEmpty)) {
 		result=result2;
 		result->Initialize(board, height, aPrune, anEmpty);
 	}

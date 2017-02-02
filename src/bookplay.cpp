@@ -28,7 +28,7 @@
 
 using namespace std;
 
-static CCache big_cache(134217728); // 4 GiB
+static CCache big_cache(33554432); // 1 GiB
 
 class CPlayerWithCache:  public CPlayerComputer {
 public:
@@ -92,10 +92,13 @@ bool HasInput() {
 int main(int argc, char **argv) {
     cout << "Ntest version as of " << __DATE__ << "\n";
     cout << "Copyright 1999-2014 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
+    if (argc != 2) {
+      cerr << "Usage: " << argv[0] << " <initial file>"  << std::endl;
+    }
     try {
       mlockall(MCL_CURRENT | MCL_FUTURE);
       cout << "Done locking pages" << std::endl;
-      for (unsigned depth: {24, 26, 28, 30}) {
+      for (unsigned depth: {26, 28, 30}) {
         dGHz = 2.8;
         maxCacheMem = 2ULL << 30; //2GiB 
         Init();
@@ -123,8 +126,8 @@ int main(int argc, char **argv) {
         fPrintCorrections = false;
         
         CPlayer* p0 = new CPlayerWithCache(cd1);
-        for (unsigned i = 0; i < 10000; ++i) {
-            CGame(p0, p0, 15 * 60, "Parallel.txt").Play();
+        for (unsigned i = 0; i < 3333; ++i) {
+            CGame(p0, p0, 15 * 60, argv[1]).Play();
             cout << "\n\n\n Done with depth " << depth << " Game " << i << "\n\n" << endl;
         }
         delete p0;

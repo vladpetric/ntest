@@ -297,9 +297,9 @@ void CSmartBook::IncreaseHeight(CQPosition pos, CBookData* bd, CHeightInfo hi, i
 		bd->SetRoot(fRoot);
 
 		bd->StoreLeaf(CHeightInfoX(hi, pos.NEmpty()), mvk.value, Boni());
-		assert(bd->IsProven()==fWLDSolved);
+		//assert(bd->IsProven()==fWLDSolved);
 	}
-	assert(bd->IsProven()==fWLDSolved);
+	//assert(bd->IsProven()==fWLDSolved);
 }
 
 // Find max subnode value, and max unsolved leaf subnode value

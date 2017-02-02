@@ -28,7 +28,7 @@ public:
 	static int Importance(int aheight, int aPrune, int nEmpty);
 
 	// misc
-	void SetStale(bool fNewStale=true);
+	void SetStale(u1 count) {iCount = count;}
 	void Verify();
 
 	// info
@@ -43,10 +43,12 @@ public:
 	void Store(int height, int iPrune, int nEmpty, CMove bestMove, int iFastestFirst, CValue searchAlpha, CValue searchBeta, CValue& value);
 
 	// debugging
-	void Print(bool fBlackMove) const;
+	void Print(bool fBlackMove, u1 count) const;
 	std::ostream& OutData(std::ostream& os) const;
 
 	bool operator<(const CCacheData& b) const;
+
+  bool isStale(u1 count) const { return iCount != count; }
 
 private:
 	CBitBoard board;
@@ -56,7 +58,7 @@ private:
 	CMove bestMove;
 	u1 iFastestFirst;
 
-	u1 fStale;
+	u1 iCount = 0;
 
 	friend class CCache;
 };
@@ -65,7 +67,6 @@ inline CCacheData::CCacheData() {};
 inline CCacheData::CCacheData(CValue anLBound, CValue aUBound, int aHeight,int aPrune,int anEmpty) { lBound=anLBound; uBound=aUBound; height=aHeight; iPrune=aPrune; nEmpty=anEmpty; }
 inline bool CCacheData::operator<(const CCacheData& b) const { return board<b.board;}
 inline std::ostream& operator<<(std::ostream& os, const CCacheData& cd) { return cd.OutData(os);}
-inline void CCacheData::SetStale(bool fNewStale) { fStale=fNewStale; }
 inline const CBitBoard& CCacheData::Board() const { return board; }
 
 /////////////////////////////////////////////////
@@ -106,5 +107,5 @@ private:
 	i4 queries, readMoves, readValues, writes;
 	CCacheData* buckets;
 	u4 nBuckets;
-	int staleCount;
+	u1 staleCount = 0;
 };
