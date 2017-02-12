@@ -28,13 +28,15 @@
 
 using namespace std;
 
-static CCache big_cache(33554432); // 1 GiB
+static CCache big_cache(16777216); // 512 MiB
 
 class CPlayerWithCache:  public CPlayerComputer {
 public:
   CPlayerWithCache(const CComputerDefaults& acd) {
     cd=acd;
     pcp=CCalcParams::NewFromString(cd.sCalcParams);
+    madvise(big_cache.buckets, sizeof(CCacheData) * big_cache.nBuckets,
+        MADV_HUGEPAGE);
 
     caches[0]=caches[1]=NULL;
     fHasCachedPos[0]=fHasCachedPos[1]=false;
@@ -98,7 +100,7 @@ int main(int argc, char **argv) {
     try {
       mlockall(MCL_CURRENT | MCL_FUTURE);
       cout << "Done locking pages" << std::endl;
-      for (unsigned depth: {26, 28, 30}) {
+      for (unsigned depth: {26}) {
         dGHz = 2.8;
         maxCacheMem = 2ULL << 30; //2GiB 
         Init();
@@ -126,7 +128,7 @@ int main(int argc, char **argv) {
         fPrintCorrections = false;
         
         CPlayer* p0 = new CPlayerWithCache(cd1);
-        for (unsigned i = 0; i < 3333; ++i) {
+        for (unsigned i = 0; i < 33333; ++i) {
             CGame(p0, p0, 15 * 60, argv[1]).Play();
             cout << "\n\n\n Done with depth " << depth << " Game " << i << "\n\n" << endl;
         }

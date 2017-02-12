@@ -108,4 +108,5 @@ private:
 	CCacheData* buckets;
 	u4 nBuckets;
 	u1 staleCount = 0;
+  friend class CPlayerWithCache;
 };
