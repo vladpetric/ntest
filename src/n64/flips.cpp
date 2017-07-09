@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include "magic.h"
+#include <x86intrin.h>
 
 /**
 * counts[index][moverBitPattern] contains the number of disks flipped in a row.
@@ -272,6 +273,78 @@ static struct magicFlip flipArray[64] = {
 { 0x4020100804020100ULL,  0x101010101010101ULL,  0x4040404040404040ULL,  0x4081020408102ULL,  0ULL,  0ULL,  6,  11 },
 { 0x8040201008040201ULL,  0x101010101010101ULL,  0x8080808080808080ULL,  0x2040810204081ULL,  0ULL,  0ULL,  5,  11 }}; 
 
+struct dflip {
+	uint64_t d9mask;
+	uint64_t d7mask;
+};
+
+static struct dflip dflip_array[64] = {
+	{ 0x8040201008040201ULL, 0ULL },
+	{ 0x80402010080402ULL, 0ULL },
+	{ 0x804020100804ULL, 0x10204ULL },
+	{ 0x8040201008ULL, 0x1020408ULL },
+	{ 0x80402010ULL, 0x102040810ULL },
+	{ 0x804020ULL, 0x10204081020ULL },
+	{ 0ULL, 0x1020408102040ULL },
+	{ 0ULL, 0x102040810204080ULL },
+	{ 0x4020100804020100ULL, 0ULL },
+	{ 0x8040201008040201ULL, 0ULL },
+	{ 0x80402010080402ULL, 0x1020408ULL },
+	{ 0x804020100804ULL, 0x102040810ULL },
+	{ 0x8040201008ULL, 0x10204081020ULL },
+	{ 0x80402010ULL, 0x1020408102040ULL },
+	{ 0ULL, 0x102040810204080ULL },
+	{ 0ULL, 0x204081020408000ULL },
+	{ 0x2010080402010000ULL, 0x10204ULL },
+	{ 0x4020100804020100ULL, 0x1020408ULL },
+	{ 0x8040201008040201ULL, 0x102040810ULL },
+	{ 0x80402010080402ULL, 0x10204081020ULL },
+	{ 0x804020100804ULL, 0x1020408102040ULL },
+	{ 0x8040201008ULL, 0x102040810204080ULL },
+	{ 0x80402010ULL, 0x204081020408000ULL },
+	{ 0x804020ULL, 0x408102040800000ULL },
+	{ 0x1008040201000000ULL, 0x1020408ULL },
+	{ 0x2010080402010000ULL, 0x102040810ULL },
+	{ 0x4020100804020100ULL, 0x10204081020ULL },
+	{ 0x8040201008040201ULL, 0x1020408102040ULL },
+	{ 0x80402010080402ULL, 0x102040810204080ULL },
+	{ 0x804020100804ULL, 0x204081020408000ULL },
+	{ 0x8040201008ULL, 0x408102040800000ULL },
+	{ 0x80402010ULL, 0x810204080000000ULL },
+	{ 0x804020100000000ULL, 0x102040810ULL },
+	{ 0x1008040201000000ULL, 0x10204081020ULL },
+	{ 0x2010080402010000ULL, 0x1020408102040ULL },
+	{ 0x4020100804020100ULL, 0x102040810204080ULL },
+	{ 0x8040201008040201ULL, 0x204081020408000ULL },
+	{ 0x80402010080402ULL, 0x408102040800000ULL },
+	{ 0x804020100804ULL, 0x810204080000000ULL },
+	{ 0x8040201008ULL, 0x1020408000000000ULL },
+	{ 0x402010000000000ULL, 0x10204081020ULL },
+	{ 0x804020100000000ULL, 0x1020408102040ULL },
+	{ 0x1008040201000000ULL, 0x102040810204080ULL },
+	{ 0x2010080402010000ULL, 0x204081020408000ULL },
+	{ 0x4020100804020100ULL, 0x408102040800000ULL },
+	{ 0x8040201008040201ULL, 0x810204080000000ULL },
+	{ 0x80402010080402ULL, 0x1020408000000000ULL },
+	{ 0x804020100804ULL, 0x2040800000000000ULL },
+	{ 0ULL, 0x1020408102040ULL },
+	{ 0ULL, 0x102040810204080ULL },
+	{ 0x804020100000000ULL, 0x204081020408000ULL },
+	{ 0x1008040201000000ULL, 0x408102040800000ULL },
+	{ 0x2010080402010000ULL, 0x810204080000000ULL },
+	{ 0x4020100804020100ULL, 0x1020408000000000ULL },
+	{ 0x8040201008040201ULL, 0ULL },
+	{ 0x80402010080402ULL, 0ULL },
+	{ 0ULL, 0x102040810204080ULL },
+	{ 0ULL, 0x204081020408000ULL },
+	{ 0x402010000000000ULL, 0x408102040800000ULL },
+	{ 0x804020100000000ULL, 0x810204080000000ULL },
+	{ 0x1008040201000000ULL, 0x1020408000000000ULL },
+	{ 0x2010080402010000ULL, 0x2040800000000000ULL },
+	{ 0x4020100804020100ULL, 0ULL },
+	{ 0x8040201008040201ULL, 0ULL }};
+
+__attribute__((target("default")))
 u64 flips(int sq, u64 mover, u64 enemy) {
     if (neighbors[sq]&enemy) {
         const struct magicFlip &m = flipArray[sq];
@@ -288,6 +361,45 @@ u64 flips(int sq, u64 mover, u64 enemy) {
         flip |= colFlips[col][colIndex];
         const int d7Index = flipIndex(col, mover, enemy, m.d7mask, m.d7mult);
         flip |= d7Flips[m.d7b][d7Index];
+
+        return flip;
+    } else {
+        return 0;
+    }
+}
+
+__attribute__((target("bmi2")))
+u64 flips(int sq, u64 mover, u64 enemy) {
+    if (neighbors[sq]&enemy) {
+        const struct dflip &m = dflip_array[sq];
+        const u64 row = sq >> 3;
+        const u64 col = sq & 7;
+
+        u64 flip=0;
+        {
+            const auto shift = row * 8;
+            const auto enemy256 = (enemy>>shift)&0xFF;
+            uint64_t flipIndex = insides[col][(mover>>shift)&outsides[col][enemy256]];
+            flip |= flipIndex << shift;
+        }
+        {
+            const auto enemy256_extr = _pext_u64(enemy, m.d9mask);
+            const auto mover256_extr = _pext_u64(mover, m.d9mask);
+            const auto pos = std::min(row, col);
+            flip |= _pdep_u64(insides[pos][mover256_extr&outsides[pos][enemy256_extr]], m.d9mask);
+        }
+        {
+            const auto colmask = 0x0101010101010101ULL << col;
+            const auto enemy256_extr = _pext_u64(enemy, colmask);
+            const auto mover256_extr = _pext_u64(mover, colmask);
+            flip |= _pdep_u64(insides[row][mover256_extr&outsides[row][enemy256_extr]], colmask);
+        }
+        {
+            const auto enemy256_extr = _pext_u64(enemy, m.d7mask);
+            const auto mover256_extr = _pext_u64(mover, m.d7mask);
+            const auto pos = std::min(row, 7 - col);
+            flip |= _pdep_u64(insides[pos][mover256_extr&outsides[pos][enemy256_extr]], m.d7mask);
+        }
 
         return flip;
     } else {

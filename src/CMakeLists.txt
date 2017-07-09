@@ -22,8 +22,6 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /GL /MT")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Ox /GL /MTd")
 endif(MSVC)
-find_library(TCMALLOC_LIBRARY NAMES tcmalloc_and_profiler tcmalloc
-             HINTS /opt/gperftools/lib)
 
 enable_testing()
 
@@ -37,7 +35,7 @@ file(GLOB HEADER_FILES *.h *.hpp)
 add_library(mainlib GameX.cpp Evaluator.cpp EvalTest.cpp MPCCalc.cpp NtestStream.cpp options.cpp PlayerComputer.cpp Pos2.cpp Pos2Test.cpp Search.cpp SearchTest.cpp SearchParams.cpp SmartBook.cpp SpeedTest.cpp treedebug.cpp Stable.cpp ${HEADER_FILES})
 
 add_executable(ntest ntest.cpp)
-target_link_libraries(ntest mainlib core game patterns odk n64 ${TCMALLOC_LIBRARY})
+target_link_libraries(ntest mainlib core game patterns odk n64)
 if(MSVC OR "${NTEST_MINGW_BUILD}")
     target_link_libraries(ntest wsock32)
 endif()

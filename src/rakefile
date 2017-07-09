@@ -25,7 +25,7 @@ else
     puts "Unknown system #{system}"
   end
 end
-add_binaries("bookconv.exe", "allPositions.exe", "bookplay.exe", "n64/bitExtractTestMain.exe", "ntest.exe", "randomEvalGen.exe", "pattern/randomPlayMain.exe")
+add_binary(path: ["bookconv.exe", "allPositions.exe", "bookplay.exe", "n64/bitExtractTestMain.exe", "ntest.exe", "randomEvalGen.exe", "pattern/randomPlayMain.exe"])
 add_test(name: "ntest_basic", binary: "ntest.exe", cmdline: "t")
 add_test(name: "bitextract", binary: "n64/bitExtractTestMain.exe")
 add_test(name: "randomplay", binary: "pattern/randomPlayMain.exe")

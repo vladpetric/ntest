@@ -397,10 +397,7 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, const TCoe
 // The layout of this function may seem "funky". The intent is to minimize the
 // number of overlapping live values, in order to reduce the number of
 // potential register spills onto the stack (amd64 a.k.a. x86_64 has only 15
-// GPRs). That is why we start with diagonals - we only need the diagonals for
-// their corresponding pattern values. The rows, on the other hand, are needed
-// for corner areas.
-// 
+// GPRs).
     TCoeff value = 0;
 
 
@@ -439,7 +436,6 @@ static INLINE_HINT CValue ValueJMobs(const CBitBoard &bb, int nEmpty, const TCoe
     const TCoeff* const pD7 = pcoeffs+offsetJD7;
     const TCoeff* const pD8 = pcoeffs+offsetJD8;
 
-    // pot mobility
     // Diagonals of type A run NWSE, with a bit step of 9.
     // Type B diagonals run NESW, with a bit step of 7.
     // Diag 8A and 8B
