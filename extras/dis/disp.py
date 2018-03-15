@@ -54,7 +54,7 @@ def ProcessFuncLines(func, lines, show_dis):
                 continue
             elif insn.opcode in [ "jmp", "jne", "jnz", "ja", "jb", "je", "jmpq", "callq"]:
                 branches += 1
-            elif insn.opcode in ["and", "or", "xor", "shr", "shl", "sar", "add", "sub", "not", "inc", "dec", "movzbl", "movzwl"]:
+            elif insn.opcode in ["and", "or", "xor", "shr", "shrx", "shl", "shlx", "sar", "add", "sub", "not", "inc", "dec", "movzbl", "movzwl"]:
                 alu_ops += 1
                 if len(insn.params) == 1:
                     assert insn.params[0].addr is None
@@ -165,7 +165,7 @@ def HandleFunction(filename, funcname, show_dis, ovrdis):
             if last_func is not None:
                 ProcessFuncLines(last_func, good_lines, show_dis)
             good_lines = []
-            if line_func_name.startswith(funcname + "("):
+            if funcname in line_func_name:
                 last_func = line_func_name
             else:
                 last_func = None
