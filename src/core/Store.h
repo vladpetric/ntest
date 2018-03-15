@@ -31,7 +31,7 @@ public:
 
 	//! Close the writer
 	//! \throw IOException if unable to write to the file
-	virtual ~Writer() throw(IOException) {};
+	virtual ~Writer() {}
 };
 
 //! Abstract interface for a stream to read information (FILE* or memory)
@@ -43,7 +43,7 @@ public:
 	//! @param count - number of data elements to read
 	//! @return number of data elements read. If this differs from count, there was an error.
 	virtual size_t read(void* data, size_t size, size_t count) = 0;
-	virtual ~Reader() throw (IOException) {};
+	virtual ~Reader() {};
 };
 
 //! Abstract interface for a place to store and retrieve information (File or Memory)
@@ -71,13 +71,13 @@ protected:
 public:
 	const std::string m_path;
 
-  FileIo(const std::string& path, bool forReading) throw(IOException);
+  FileIo(const std::string& path, bool forReading);
   FileIo(FILE* fpt): fp(fpt) {}
 	size_t write(const void* data, size_t size, size_t count) {
 		return fwrite(data, size, count, fp);
 	}
 
-	virtual ~FileIo() throw(IOException);
+	virtual ~FileIo() ;
 };
 
 class FileWriter : public Writer {
@@ -88,7 +88,7 @@ private:
 
 public:
 	FileWriter(const std::string& path);
-	~FileWriter() throw(IOException);
+	~FileWriter() ;
 
 	size_t write(const void* data, size_t size, size_t count) {
 		return m_file->write(data, size, count);
@@ -97,12 +97,12 @@ public:
 
 class FileReader : public FileIo, public Reader {
 public:
-	FileReader(const std::string& path) throw(IOException): FileIo(path, true) {};
+	FileReader(const std::string& path): FileIo(path, true) {};
 
 	size_t read(void* data, size_t size, size_t count) {
 		return fread(data, size, count, fp);
 	}
-  ~FileReader() throw (IOException) {}
+  ~FileReader() {}
 };
 
 class File : public Store {

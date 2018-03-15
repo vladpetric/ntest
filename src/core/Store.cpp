@@ -7,22 +7,23 @@
 #include "Store.h"
 #include <sstream>
 
-FileIo::FileIo(const std::string& path, bool forReading) throw(IOException) : m_path(path) {
+FileIo::FileIo(const std::string& path, bool forReading)  : m_path(path) {
 	const char* mode = forReading ? "rb" : "wb";
 	fp = fopen(path.c_str(), mode);
 	if (fp==NULL) {
-		throw IOException("Unable to open file", path, errno);
+		fprintf(stderr, "Unable to open file %s\n", path.c_str());
+		exit(1);
 	}
 }
 
-FileIo::~FileIo() throw(IOException) {
+FileIo::~FileIo()  {
 	if (fp==NULL) {
-		throw IOException("File is not open", "", -1);
+		fprintf(stderr, "File is not open %s\n", m_path.c_str());
 	}
 	int result = fclose(fp);
 	fp=NULL;
 	if (result!=0) {
-		throw IOException("Error closing the file", "", result);
+		fprintf(stderr, "Error closing the file %s\n", m_path.c_str());
 	}
 }
 
@@ -53,7 +54,7 @@ FileWriter::FileWriter(const std::string& path) : m_permanentPath(path)
 	, m_file(new FileIo(m_tempPath, false)) {
 }
 
-FileWriter::~FileWriter() throw(IOException) {
+FileWriter::~FileWriter()  {
 	m_file.reset(0);
 #ifdef _WIN32
 	if (!MoveFileExA(m_tempPath.c_str(), m_permanentPath.c_str(), MOVEFILE_REPLACE_EXISTING)) {
@@ -77,7 +78,8 @@ FileWriter::~FileWriter() throw(IOException) {
 	if (rename(m_tempPath.c_str(), m_permanentPath.c_str()) != 0) {
 		std::ostringstream os;
 		os << "WARNING: Can't save book file " << m_permanentPath << ' ' << strerror(errno) << std::endl;
-		throw IOException(os.str(), m_permanentPath, errno);
+		fprintf(stderr, "%s", os.str().c_str());
+		exit(1);
 	}
 #endif
 }

@@ -276,8 +276,8 @@ void TestMoveSpeed(int hSolveFrom, int nGames, char* sMode) {
 		//	TestMidgameSpeed(i,nGames,fEndgameOnly);
 		TestMidgameSpeed(hSolveFrom, CHeightInfo(hSolveFrom,0,true), nGames, (sMode && strchr(sMode,'e'))?kOnlyFinalRound:0);
 #endif
-		const int hEndgame=22;
+		const int hEndgame=26;
 		TestMidgameSpeed(hEndgame, CHeightInfo(hEndgame-hSolverStart,0,true), 12, kPrintTestHeader);
-		const int hMidgame=20;
-		TestMidgameSpeed(35, CHeightInfo(hMidgame,4,false), 12, kPrintTestHeader);
+		const int hMidgame=28;
+		TestMidgameSpeed(36, CHeightInfo(hMidgame,4,false), 12, kPrintTestHeader);
 }	

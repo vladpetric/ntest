@@ -365,14 +365,6 @@ inline int solveMobility(int alpha, int beta, u64 mover, u64 enemy, u64 parity, 
 				if (collectCutoffStats) {
 					const int nEmpty = bitCountInt(~(mover|enemy));
 					updateCutoffs(i, nEmpty);
-					//if (i>1 && nEmpty==11) {
-					//	printBoard(mover, enemy);
-					//	std::cout << "beta cutoff at beta = " << beta << ", score = " << childScore <<", best was " << score << "\n";
-					//	for (int j=0; j<=i; j++) {
-					//		std::cout << squareText(moveEmpty(search, moveScores[j])->sq) << " ";
-					//	}
-					//	std::cout << "\n";
-					//}
 				}
 				score = childScore; 
 				break;
