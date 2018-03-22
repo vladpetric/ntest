@@ -127,6 +127,8 @@ CPlayerComputer::~CPlayerComputer() {
 }
 
 u4 CPlayerComputer::LogCacheSize(CCalcParams* pcp, int aPrune) {
+  return 23;
+  /*
 	u2 lgCacheSize;
 	
 	// basic suggestion from the calc params
@@ -149,7 +151,7 @@ u4 CPlayerComputer::LogCacheSize(CCalcParams* pcp, int aPrune) {
 	if (lgCacheSize<2)
 		lgCacheSize=2;
 
-	return lgCacheSize;
+	return lgCacheSize; */
 }
 
 //! Set the contempt such that draws always go to black or white, depending on fDrawsToBlack

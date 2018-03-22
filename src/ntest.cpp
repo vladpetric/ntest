@@ -7,6 +7,11 @@
 
 #ifdef _MSC_VER 
 #pragma warning(disable: 4786)
+#include <windows.h>
+#endif
+
+#ifdef __MINGW64__
+#include <windows.h>
 #endif
 
 #include <ctime>
@@ -270,8 +275,13 @@ int main(int argc, char**argv, char**envp) {
 		const char* submode;
 
 		cout << "Ntest version as of " << __DATE__ << "\n";
-		cout << "Copyright 1999-2014 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
+		cout << "Copyright 1999-2018 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
 
+#if defined(_MSC_VER) || defined(__MINGW64__)
+    if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)) {
+      cerr << "Unable to set realtime priority for process\n";
+    }
+#endif
 		//_crtBreakAlloc=329;
 
 		////////////////////////////////////////
