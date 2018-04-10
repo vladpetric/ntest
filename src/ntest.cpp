@@ -278,9 +278,9 @@ int main(int argc, char**argv, char**envp) {
     	cout << "Copyright 1999-2018 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
 
 #if defined(_MSC_VER) || defined(__MINGW64__)
-    if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)) {
-      cerr << "Unable to set realtime priority for process\n";
-    }
+        if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)) {
+            cerr << "Unable to set realtime priority for process\n";
+        }
 #endif
     	//_crtBreakAlloc=329;
 
