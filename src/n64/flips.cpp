@@ -277,7 +277,31 @@ struct dflip {
 	uint64_t d9mask;
 	uint64_t d7mask;
 };
+__attribute__((target("default")))
+u64 flips(int sq, u64 mover, u64 enemy) {
+    if (neighbors[sq]&enemy) {
+        const struct magicFlip &m = flipArray[sq];
+        const int row = sq >> 3;
+        const int col = sq & 7;
 
+        u64 flip=0;
+
+        const int rowIndex = rowFlipIndex(row, col, mover, enemy);
+        flip |= rowFlips[row][rowIndex];
+        const int d9Index = flipIndex(col, mover, enemy, m.d9mask, m.d9mult);
+        flip |= d9Flips[m.d9b][d9Index];
+        const int colIndex = flipIndex(row, mover, enemy, m.colmask, m.colmult);
+        flip |= colFlips[col][colIndex];
+        const int d7Index = flipIndex(col, mover, enemy, m.d7mask, m.d7mult);
+        flip |= d7Flips[m.d7b][d7Index];
+
+        return flip;
+    } else {
+        return 0;
+    }
+}
+
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
 static struct dflip dflip_array[64] = {
 	{ 0x8040201008040201ULL, 0ULL },
 	{ 0x80402010080402ULL, 0ULL },
@@ -344,30 +368,6 @@ static struct dflip dflip_array[64] = {
 	{ 0x4020100804020100ULL, 0ULL },
 	{ 0x8040201008040201ULL, 0ULL }};
 
-__attribute__((target("default")))
-u64 flips(int sq, u64 mover, u64 enemy) {
-    if (neighbors[sq]&enemy) {
-        const struct magicFlip &m = flipArray[sq];
-        const int row = sq >> 3;
-        const int col = sq & 7;
-
-        u64 flip=0;
-
-        const int rowIndex = rowFlipIndex(row, col, mover, enemy);
-        flip |= rowFlips[row][rowIndex];
-        const int d9Index = flipIndex(col, mover, enemy, m.d9mask, m.d9mult);
-        flip |= d9Flips[m.d9b][d9Index];
-        const int colIndex = flipIndex(row, mover, enemy, m.colmask, m.colmult);
-        flip |= colFlips[col][colIndex];
-        const int d7Index = flipIndex(col, mover, enemy, m.d7mask, m.d7mult);
-        flip |= d7Flips[m.d7b][d7Index];
-
-        return flip;
-    } else {
-        return 0;
-    }
-}
-
 __attribute__((target("bmi2")))
 u64 flips(int sq, u64 mover, u64 enemy) {
     if (neighbors[sq]&enemy) {
@@ -406,6 +406,52 @@ u64 flips(int sq, u64 mover, u64 enemy) {
         return 0;
     }
 }
+
+/* not used, I need to figure out a better algorithm for diagonal masks */
+__attribute__((target("bmi2")))
+u64 flips_bmi2_noref(int sq, u64 mover, u64 enemy) {
+    constexpr u64 main_diag = 0x8040201008040201ULL;
+    constexpr u64 sec_diag  = 0x0102040810204080ULL;
+    if (neighbors[sq]&enemy) {
+        const u64 row = sq >> 3;
+        const u64 col = sq & 7;
+
+        u64 flip=0;
+        {
+            const auto shift = row * 8;
+            const auto enemy256 = (enemy>>shift)&0xFF;
+            uint64_t flipIndex = insides[col][(mover>>shift)&outsides[col][enemy256]];
+            flip |= flipIndex << shift;
+        }
+        {
+            auto mask = (main_diag >> 8 * std::max<int64_t>(col - row, 0LL)) << 8 * std::max<int64_t>(row - col, 0LL);
+            const auto enemy256_extr = _pext_u64(enemy, mask);
+            const auto mover256_extr = _pext_u64(mover, mask);
+            const auto pos = std::min(row, col);
+            auto ins = insides[pos][mover256_extr&outsides[pos][enemy256_extr]];
+            flip |= _pdep_u64(ins, mask);
+        }
+        {
+            const auto colmask = 0x0101010101010101ULL << col;
+            const auto enemy256_extr = _pext_u64(enemy, colmask);
+            const auto mover256_extr = _pext_u64(mover, colmask);
+            flip |= _pdep_u64(insides[row][mover256_extr&outsides[row][enemy256_extr]], colmask);
+        }
+        {
+            auto mask = (sec_diag >> 8 * std::max<int64_t>(7 - col - row, 0LL)) << 8 * std::max<int64_t>(row - 7 + col, 0LL);
+            const auto enemy256_extr = _pext_u64(enemy, mask);
+            const auto mover256_extr = _pext_u64(mover, mask);
+            const auto pos = std::min(row, 7 - col);
+            auto ins = insides[pos][mover256_extr&outsides[pos][enemy256_extr]];
+            flip |= _pdep_u64(ins, mask);
+        }
+
+        return flip;
+    } else {
+        return 0;
+    }
+}
+#endif
 
 
 struct magicCount {

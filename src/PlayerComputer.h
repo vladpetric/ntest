@@ -54,7 +54,7 @@ public:
 	//CPlayerComputer(char anEval, char aCoeffSet, CCalcParams* pcp, int iPrune, bool fBook=true, bool fCNABook=true);
 	CPlayerComputer(const CComputerDefaults& acd);
     CPlayerComputer() {}
-	~CPlayerComputer();
+	virtual ~CPlayerComputer();
 
 	// game playing
 	virtual void StartMatch(const COsMatch& match);
