@@ -1,5 +1,5 @@
 // Copyright Chris Welty
-// All Rights Reserved
+//  All Rights Reserved
 // This file is distributed subject to GNU GPL version 3. See the files
 // GPLv3.txt and License.txt in the instructions subdirectory for details.
 
@@ -670,7 +670,7 @@ private:
 
     enum { kWldSolved=1, kRoot=2, kWld=4, kKnownSolve=8 };
     u2 flags; //!< packed value containing sum of enum flags plus (height<<4)+(iPrune<<10)
-	i2 v;
+    i2 v;
 };
 
 CBookDataCompressed::CBookDataCompressed(const CBookData& bd) {

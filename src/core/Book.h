@@ -1,5 +1,5 @@
 // Copyright Chris Welty
-// All Rights Reserved
+//  All Rights Reserved
 
 // book header file
 
@@ -245,7 +245,7 @@ public:
 
     // testing
     static void TestIO();
-	void TestMyIO(std::vector<signed char>* contents = NULL);
+    void TestMyIO(std::vector<signed char>* contents = NULL);
     bool operator==(const CBook& b) const;
 
     //! Dangerous
