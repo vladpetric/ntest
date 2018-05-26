@@ -44,7 +44,14 @@ public:
     static CEvaluator* FindEvaluator(char evaluatorType, char coeffSet);
 
     // pos2 evaluators
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
+    __attribute__((target("default")))
     CValue EvalMobs(const Pos2& pos, u4 nMovesPlayer, u4 nMovesOpponent) const;
+    __attribute__((target("bmi2")))
+    CValue EvalMobs(const Pos2& pos, u4 nMovesPlayer, u4 nMovesOpponent) const;
+#else
+    CValue EvalMobs(const Pos2& pos, u4 nMovesPlayer, u4 nMovesOpponent) const;
+#endif
 
     ~CEvaluator();
 
@@ -60,4 +67,4 @@ private:
 
 extern int coeffStartsJ[nMapsJ];
 extern int nCoeffsJ;
-extern TCoeff *mobsJ;
+//extern TCoeff *mobsJ;

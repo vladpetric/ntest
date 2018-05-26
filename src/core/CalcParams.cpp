@@ -23,7 +23,7 @@ double dGHz;    //	double dGHz - Approx processor speed
 double tSetStale=0.17;    // time to SetStale() in seconds... so we don't lose on time
 
 // maximum memory for cache
-uint64_t maxCacheMem=4ULL<<30; // 4 GB
+uint64_t maxCacheMem=2ULL<<30; // 2 GB
 
 void SetMatchTime(double aMatchTime) {
     if (aMatchTime<=0)

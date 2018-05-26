@@ -9,7 +9,7 @@
 #include "../core/BitBoard.h"
 #include "../core/Moves.h"
 #include "../pattern/Patterns.h"
-#include "Stable.hpp"
+#include "../Stable.hpp"
 #include "../n64/test.h"
 #include "../n64/flips.h"
 

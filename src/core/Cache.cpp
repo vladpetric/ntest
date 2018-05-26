@@ -212,7 +212,7 @@ void CCacheData::Print(bool blackMove, u1 count) const {
 CCache::CCache(u4 anbuckets) {
     fprintf(stderr, "Creating cache with %d buckets (%llu MB)\n",anbuckets, static_cast<unsigned long long>(anbuckets*sizeof(CCacheData)>>20));
     nBuckets=anbuckets;
-    buckets=new CCacheData[nBuckets];
+    buckets=reinterpret_cast<CCacheData*>(calloc(sizeof(CCacheData), nBuckets));
     assert(buckets);
     assert((nBuckets&(nBuckets-1))==0);
 
@@ -221,7 +221,7 @@ CCache::CCache(u4 anbuckets) {
 }
 
 CCache::~CCache() {
-    delete[] buckets;
+    free(buckets);
 }
 
 void CCache::Clear() {
@@ -257,24 +257,19 @@ void CCache::ClearStats() {
 // FindOld -- find an entry in the cache. If there is no entry return NULL.
 //    If there is an entry set its stale flag to false and return it.
 CCacheData* CCache::FindOld(const CBitBoard& board, u64 hash) {
-    CCacheData* result, *result2;
+    CCacheData *r1, *r2, *res;
 
     hash&=nBuckets-1;
-    result=buckets+hash;
-    result2=buckets+(hash^1);
+    r1=buckets+hash;
+    r2=buckets+(hash^1);
 
     // is this position in cache?
-    if (result->board==board) {
-    	result->SetStale(staleCount);
-    }
-    else if (result2->board==board) {
-    	result=result2;
-    	result->SetStale(staleCount);
-    }
-    else
-    	result=0;
+    res = nullptr;
+    if (r1->board==board) res = r1;
+    if (r2->board==board) res = r2;
+    if (res) res->SetStale(staleCount);
 
-    return result;
+    return res;
 }
 
 // FindNew -- find an entry in the cache. If there is no entry create one, with height and iPrune preset.

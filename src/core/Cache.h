@@ -57,8 +57,8 @@ private:
 
     CMove bestMove;
     u1 iFastestFirst;
-
-    u1 iCount = 0;
+    u1 iCount;
+    /* all of the above should be implicitly set to 0 by calloc */
 
     friend class CCache;
 };
@@ -108,5 +108,5 @@ private:
     CCacheData* buckets;
     u4 nBuckets;
     u1 staleCount = 0;
-  friend class CPlayerWithCache;
+    friend class CPlayerWithCache;
 };

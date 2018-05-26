@@ -102,7 +102,7 @@ inline bool CBitBoard::IsImpossible() const {
     return (mover&empty)?true:false;
 }
 
-inline bool CBitBoard::operator==(const CBitBoard& b) const { return mover==b.mover && empty==b.empty;};
+inline bool CBitBoard::operator==(const CBitBoard& b) const { return !((mover^b.mover)|(empty^b.empty));};
 inline bool CBitBoard::operator!=(const CBitBoard& b) const { return mover!=b.mover || empty!=b.empty;};
 inline void CBitBoard::FlipVertical() { empty=flipVertical(empty); mover=flipVertical(mover);}
 inline void CBitBoard::FlipHorizontal() { empty=flipHorizontal(empty); mover=flipHorizontal(mover);}
