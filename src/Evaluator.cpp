@@ -579,26 +579,6 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;
 
-#define BB_EXTRACT_STEP_PATTERN(START, COUNT, STEP) \
-        (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)] + \
-         2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
-
-    value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(0, 8, 9)];
-    value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(7, 8, 7)];
-    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(1, 7, 9)];
-    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(8, 7, 9)];
-    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(6, 7, 7)];
-    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(15, 7, 7)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(2, 6, 9)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(16, 6, 9)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(3, 5, 9)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(24, 5, 9)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(4, 5, 7)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(31, 5, 7)];
-#undef BB_EXTRACT_STEP_PATTERN
-
     const TCoeff* const pR1 = pcoeffs+offsetJR1;
     const TCoeff* const pR2 = pcoeffs+offsetJR2;
     const TCoeff* const pR3 = pcoeffs+offsetJR3;
@@ -630,6 +610,27 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
     valueEdge += ValueEdgePatternsJ(pcoeffs, Row7, Row6);
 #undef BB_EXTRACT_ROW_PATTERN
+
+#define BB_EXTRACT_STEP_PATTERN(START, COUNT, STEP) \
+        (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)] + \
+         2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
+
+    value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(0, 8, 9)];
+    value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(7, 8, 7)];
+    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(1, 7, 9)];
+    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(8, 7, 9)];
+    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(6, 7, 7)];
+    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(15, 7, 7)];
+    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
+    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
+    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(2, 6, 9)];
+    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(16, 6, 9)];
+    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(3, 5, 9)];
+    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(24, 5, 9)];
+    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(4, 5, 7)];
+    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(31, 5, 7)];
+#undef BB_EXTRACT_STEP_PATTERN
+
     
 #define BB_EXTRACT_FLIPPED_ROW_PATTERN(ROW) \
         (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (ROW), 8, 8>::value)] +  \
