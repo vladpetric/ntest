@@ -575,6 +575,11 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     // This is a specialization of the Evaluator using the bmi2 pext instruction (_pext_u64)
 
     TCoeff value = 0;
+    // mobility
+    value += (ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP) +
+              ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO) +
+    // parity
+              ConfigValue(pcoeffs, pos2.NEmpty()&1, PARJ, offsetJPAR)) << 16;
 
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;
@@ -592,23 +597,23 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += pR1[Row0];
     TConfig Row1 = BB_EXTRACT_ROW_PATTERN(1);
     value += pR2[Row1];
+    value += ValueEdgePatternsJ(pcoeffs, Row0, Row1) << 16;
     TConfig Row2 = BB_EXTRACT_ROW_PATTERN(2);
     value += pR3[Row2];
     TConfig Row3 = BB_EXTRACT_ROW_PATTERN(3);
     value += pR4[Row3];
     value += ValueTrianglePatternsJ(pcoeffs, Row0, Row1, Row2, Row3);
-    TConfig valueEdge = ValueEdgePatternsJ(pcoeffs, Row0, Row1);
 
-    TConfig Row4 = BB_EXTRACT_ROW_PATTERN(4);
-    value += pR4[Row4];
-    TConfig Row5 = BB_EXTRACT_ROW_PATTERN(5);
-    value += pR3[Row5];
     TConfig Row6 = BB_EXTRACT_ROW_PATTERN(6);
     value += pR2[Row6];
     TConfig Row7 = BB_EXTRACT_ROW_PATTERN(7);
     value += pR1[Row7];
+    value += ValueEdgePatternsJ(pcoeffs, Row7, Row6) << 16;
+    TConfig Row4 = BB_EXTRACT_ROW_PATTERN(4);
+    value += pR4[Row4];
+    TConfig Row5 = BB_EXTRACT_ROW_PATTERN(5);
+    value += pR3[Row5];
     value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Row7, Row6);
 #undef BB_EXTRACT_ROW_PATTERN
 
 #define BB_EXTRACT_STEP_PATTERN(START, COUNT, STEP) \
@@ -640,12 +645,12 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += pR1[Column0];
     TConfig Column1 = BB_EXTRACT_FLIPPED_ROW_PATTERN(1);
     value += pR2[Column1];
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Column0, Column1);
+    value += ValueEdgePatternsJ(pcoeffs, Column0, Column1) << 16;
     TConfig Column6 = BB_EXTRACT_FLIPPED_ROW_PATTERN(6);
     value += pR2[Column6];
     TConfig Column7 = BB_EXTRACT_FLIPPED_ROW_PATTERN(7);
     value += pR1[Column7];
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Column7, Column6);
+    value += ValueEdgePatternsJ(pcoeffs, Column7, Column6) << 16;
     value += pR3[BB_EXTRACT_FLIPPED_ROW_PATTERN(2)];
     value += pR3[BB_EXTRACT_FLIPPED_ROW_PATTERN(5)];
     value += pR4[BB_EXTRACT_FLIPPED_ROW_PATTERN(3)];
@@ -663,12 +668,6 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     // pot mobility
     value += ConfigValue(pcoeffs, nPMP, PM1J, offsetJPMP);
     value += ConfigValue(pcoeffs, nPMO, PM2J, offsetJPMO);
-    value += valueEdge;
-    // mobility
-    value+=ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP);
-    value+=ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO);
-    // parity
-    value+=ConfigValue(pcoeffs, pos2.NEmpty()&1, PARJ, offsetJPAR);
 
     return CValue(value);
 }
