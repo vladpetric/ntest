@@ -415,7 +415,15 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
 // their corresponding pattern values. The rows, on the other hand, are needed
 // for corner areas.
 // 
+    // Value has a lower 16 bit component and a higher one. The lower bits are used to
+    // unpack potmob values (potential mobility)
     TCoeff value = 0;
+
+    // mobility
+    value += (ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP) +
+              ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO) +
+    // parity
+              ConfigValue(pcoeffs, pos2.NEmpty()&1, PARJ, offsetJPAR)) << 16;
 
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;
@@ -505,23 +513,23 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += pR1[Row0];
     TConfig Row1 = BB_EXTRACT_ROW_PATTERN(1);
     value += pR2[Row1];
+    value += ValueEdgePatternsJ(pcoeffs, Row0, Row1) << 16;
     TConfig Row2 = BB_EXTRACT_ROW_PATTERN(2);
     value += pR3[Row2];
     TConfig Row3 = BB_EXTRACT_ROW_PATTERN(3);
     value += pR4[Row3];
     value += ValueTrianglePatternsJ(pcoeffs, Row0, Row1, Row2, Row3);
-    TConfig valueEdge = ValueEdgePatternsJ(pcoeffs, Row0, Row1);
 
+    TConfig Row6 = BB_EXTRACT_ROW_PATTERN(6);
+    value += pR2[Row6];
+    TConfig Row7 = BB_EXTRACT_ROW_PATTERN(7);
+    value += ValueEdgePatternsJ(pcoeffs, Row7, Row6) << 16;
+    value += pR1[Row7];
     TConfig Row4 = BB_EXTRACT_ROW_PATTERN(4);
     value += pR4[Row4];
     TConfig Row5 = BB_EXTRACT_ROW_PATTERN(5);
     value += pR3[Row5];
-    TConfig Row6 = BB_EXTRACT_ROW_PATTERN(6);
-    value += pR2[Row6];
-    TConfig Row7 = BB_EXTRACT_ROW_PATTERN(7);
-    value += pR1[Row7];
     value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Row7, Row6);
 #undef BB_EXTRACT_ROW_PATTERN
     
     uint64_t flippedMover = flipDiagonal(mover);
@@ -535,12 +543,12 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += pR1[Column0];
     TConfig Column1 = BB_EXTRACT_FLIPPED_ROW_PATTERN(1);
     value += pR2[Column1];
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Column0, Column1);
+    value += ValueEdgePatternsJ(pcoeffs, Column0, Column1) << 16;
     TConfig Column6 = BB_EXTRACT_FLIPPED_ROW_PATTERN(6);
     value += pR2[Column6];
     TConfig Column7 = BB_EXTRACT_FLIPPED_ROW_PATTERN(7);
     value += pR1[Column7];
-    valueEdge += ValueEdgePatternsJ(pcoeffs, Column7, Column6);
+    value += ValueEdgePatternsJ(pcoeffs, Column7, Column6) << 16;
     value += pR3[BB_EXTRACT_FLIPPED_ROW_PATTERN(2)];
     value += pR3[BB_EXTRACT_FLIPPED_ROW_PATTERN(5)];
     value += pR4[BB_EXTRACT_FLIPPED_ROW_PATTERN(3)];
@@ -558,15 +566,10 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     // pot mobility
     value += ConfigValue(pcoeffs, nPMP, PM1J, offsetJPMP);
     value += ConfigValue(pcoeffs, nPMO, PM2J, offsetJPMO);
-    value += valueEdge;
-    // mobility
-    value+=ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP);
-    value+=ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO);
-    // parity
-    value+=ConfigValue(pcoeffs, pos2.NEmpty()&1, PARJ, offsetJPAR);
 
     return CValue(value);
 }
+
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
 __attribute__((target("bmi2")))
 CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent) const {
@@ -574,7 +577,10 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     const TCoeff *const pcoeffs = this->pcoeffs[pos2.NEmpty()];
     // This is a specialization of the Evaluator using the bmi2 pext instruction (_pext_u64)
 
+    // Value has a lower 16 bit component and a higher one. The lower bits are used to
+    // unpack potmob values (potential mobility)
     TCoeff value = 0;
+
     // mobility
     value += (ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP) +
               ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO) +
@@ -621,17 +627,17 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
          2 * base2ToBase3Table[_pext_u64(mover, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)])
 
     value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(0, 8, 9)];
-    value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(7, 8, 7)];
     value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(1, 7, 9)];
     value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(8, 7, 9)];
-    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(6, 7, 7)];
-    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(15, 7, 7)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
     value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(2, 6, 9)];
     value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(16, 6, 9)];
     value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(3, 5, 9)];
     value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(24, 5, 9)];
+    value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(7, 8, 7)];
+    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(6, 7, 7)];
+    value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(15, 7, 7)];
+    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
+    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
     value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(4, 5, 7)];
     value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(31, 5, 7)];
 #undef BB_EXTRACT_STEP_PATTERN

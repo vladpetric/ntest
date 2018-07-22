@@ -35,7 +35,6 @@ void ValueBookCacheOrTree(Pos2& pos2, int height, CValue alpha, CValue beta, CMo
 void ValueCacheOrTree(Pos2& pos2, int height, CValue alpha, CValue beta, CMoves& moves, int iPrune, CMoveValue& best);
 CValue ChildValue(Pos2& pos2, int height, CValue alpha, CValue beta, int iPrune);
 bool MPCCheck(Pos2& pos2, int height, CValue alpha, CValue beta, const CMoves& moves, int& iPrune, CMoveValue& best);
-void ValueTreeNoSort(Pos2& pos2, int height, int hChild, CValue alpha, CValue beta, CMoves& moves, int iPrune, CMoveValue& best);
 bool ValueMove(Pos2& pos2, int height, int hChild, CValue alpha, CValue beta, CMove& move, CMoves& moves, int iPrune,
                                   bool fNegascout, CMoveValue& best);
 
@@ -299,38 +298,6 @@ inline bool MPCCheck(Pos2& pos2, int height, CValue alpha, CValue beta, const CM
     }
 
     return false;
-}
-
-///////////////////////////////////////////////////////////////////////
-// ValueTreeNoSort - value a move by tree search, with no move sorting
-// Inputs:
-//    hChild - height of child node
-///////////////////////////////////////////////////////////////////////
-
-inline void ValueTreeNoSort(Pos2& pos2, int height, int hChild, CValue alpha, CValue beta, CMoves& moves, int iPrune, CMoveValue& best) {
-    CValue vChild, vSearchAlpha;
-    CMove    move;
-
-    // alpha-beta search 
-    while(moves.GetNext(move)) {
-        vSearchAlpha=std::max(best.value, alpha);
-        Pos2 save_pos = pos2;
-        pos2.MakeMoveBB(move.Square());
-        TREEDEBUG_BEFORE;
-        vChild=ChildValue(pos2, hChild, vSearchAlpha, beta, iPrune);
-        TREEDEBUG_AFTER;
-        if (abortRound)
-            return;
-        if (vChild>best.value) {
-            best.move=move;
-            best.value=vChild;
-            if (best.value>=beta) {
-                TREEDEBUG_CUTOFF;
-                return;
-            }
-        }
-        pos2 = save_pos;
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////
