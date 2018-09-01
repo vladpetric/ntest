@@ -5,7 +5,9 @@
 
 // Evaluator source code
 #include <sstream>
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
 #include <x86intrin.h>
+#endif
 #include "core/QPosition.h"
 #include "n64/bitextractor.h"
 

@@ -274,7 +274,7 @@ public:
     COsMoveListItem mlisKomi[2];
     COsMatchType mt;
     COsResult result;
-
+    virtual ~COsGame() {}
     void Update(const COsMoveListItem& mli);
     void UpdateKomiSet(const COsMoveListItem mlis[2]);
 

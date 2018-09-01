@@ -49,6 +49,7 @@ public:
 //! Abstract interface for a place to store and retrieve information (File or Memory)
 class Store {
 public:
+	virtual ~Store() {}
 	//! get a new Writer to write to this Store.
 	//! The caller is responsible for calling delete(writer)
 	//! \throw IOException if an error occurred when opening the file

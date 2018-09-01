@@ -2,7 +2,9 @@
 #include <cassert>
 #include <iostream>
 #include "magic.h"
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
 #include <x86intrin.h>
+#endif
 
 /**
 * counts[index][moverBitPattern] contains the number of disks flipped in a row.
