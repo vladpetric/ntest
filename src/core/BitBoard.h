@@ -12,6 +12,7 @@
 #if __GNUC__ >= 4 && defined(__x86_64__)
 #include <xmmintrin.h>
 #include <smmintrin.h>
+#include <wmmintrin.h>
 #elif defined(_WIN32)
 #include <nmmintrin.h>
 #endif
@@ -50,25 +51,46 @@ public:
     // I/O
     void Print(bool fBlackMove) const;// Print the board in human-readable format
     void FPrint(FILE* fp, bool blackMove) const;// Print the board in human-readable format
-    bool Write(FILE* fp) const;	// print in bitstream format
-    bool Read(FILE* fp);		// read in bitstream format; return true if successful
+    bool Write(FILE* fp) const; // print in bitstream format
+    bool Read(FILE* fp); // read in bitstream format; return true if successful
     char* GetSBoard(char sBoard[NN+1], bool fBlackMove) const;
+    static constexpr __m128i xmm_key_1 { 0x7f9549b967963e86LL,  0x3ec4f67455147580LL};
+    static constexpr __m128i xmm_key_2 { 0x216c272838d5e65bLL,   0x13e88ae85ba72bfLL};
+    static constexpr __m128i xmm_key_3 { 0x125debcc5f19a4dbLL, -0x7d12beba70222040LL};
+    static constexpr __m128i xmm_key_4 {-0x3adbf16345e7cc84LL,  0x75bc3d6b61ec11b1LL};
+    static constexpr __m128i xmm_key_5 {-0x20bb65acc4a3bcdeLL, -0x4baa25957d8f982eLL};
 
-    // statistics
     u64 Hash() const {
 #if (__GNUC__ >= 4 && defined(__x86_64__)) || defined(_WIN32)
-    	uint64_t crc = _mm_crc32_u64(0, empty);
-    	return (_mm_crc32_u64(crc, mover) * 0x10001ull);
+        uint64_t crc = _mm_crc32_u64(0xffffffff, empty);
+        return (_mm_crc32_u64(crc, mover) * 0x10001ull);
 #else
-    	u4 a, b, c, d;
-    	a = u4(empty);
-    	b = u4(empty >> 32);
-    	c = u4(mover);
-    	d = u4(mover >> 32);
-    	bobLookup(a, b, c, d);
-    	return d;
+        u4 a, b, c, d;
+        a = u4(empty);
+        b = u4(empty >> 32);
+        c = u4(mover);
+        d = u4(mover >> 32);
+        bobLookup(a, b, c, d);
+        return d;
 #endif
     }
+    u32 XmmHash() const {
+#if (__GNUC__ >= 4 && defined(__x86_64__)) || defined(_WIN32)
+    	auto xmm_loaded = _mm_set_epi64x(empty, mover);
+    	auto encoded = _mm_aesenclast_si128(_mm_aesenc_si128(_mm_aesenc_si128(_mm_aesenc_si128(_mm_aesenc_si128(xmm_loaded, xmm_key_1), xmm_key_2), xmm_key_3), xmm_key_4), xmm_key_5);
+    	uint64_t hash =  _mm_extract_epi64(encoded, 0);
+	return (hash >> 32 | hash) & 0xffffffff;
+#else
+        u4 a, b, c, d;
+        a = u4(empty);
+        b = u4(empty >> 32);
+        c = u4(mover);
+        d = u4(mover >> 32);
+        bobLookup(a, b, c, d);
+        return d;
+#endif
+    }
+    // statistics
 
     int NEmpty() const { return bitCountInt(empty); }
     int NMover() const { return bitCountInt(mover); }
