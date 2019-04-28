@@ -62,7 +62,7 @@ public:
 
     u64 Hash() const {
 #if (__GNUC__ >= 4 && defined(__x86_64__)) || defined(_WIN32)
-        uint64_t crc = _mm_crc32_u64(0xffffffff, empty);
+        uint64_t crc = _mm_crc32_u64(0, empty);
         return (_mm_crc32_u64(crc, mover) * 0x10001ull);
 #else
         u4 a, b, c, d;
