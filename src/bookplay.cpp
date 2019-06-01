@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     try {
       mlockall(MCL_CURRENT | MCL_FUTURE);
       cout << "Done locking pages" << std::endl;
-      for (unsigned depth: {26}) {
+      for (unsigned depth: {16,18,20}) {
         dGHz = 2.8;
         maxCacheMem = 2ULL << 30; //2GiB 
         Init();

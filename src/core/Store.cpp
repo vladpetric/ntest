@@ -28,6 +28,7 @@ FileIo::~FileIo()  {
 }
 
 static std::string TempPath(const std::string& path) {
+#ifdef _WIN32
 	// generate temporary file name for writing
 	std::string tempDir;
 	size_t loc = path.find_last_of("\\/");
@@ -37,14 +38,12 @@ static std::string TempPath(const std::string& path) {
 	else {
 		tempDir.assign(path, 0, loc);
 	}
-#ifdef _WIN32
 	char fnTemp[MAX_PATH+1];
 	GetTempFileNameA(tempDir.c_str(), "bk", 0, fnTemp);
 	fnTemp[MAX_PATH]=0;
 	return std::string(fnTemp);
 #else
-  char buff[] = "/tmp/tempbkXXXXX";
-  return std::string(tmpnam(buff));
+  return "./tempbkXXXXX";
 #endif
 
 }
@@ -77,7 +76,7 @@ FileWriter::~FileWriter()  {
 #else
 	if (rename(m_tempPath.c_str(), m_permanentPath.c_str()) != 0) {
 		std::ostringstream os;
-		os << "WARNING: Can't save book file " << m_permanentPath << ' ' << strerror(errno) << std::endl;
+		os << "WARNING: Can't save book file " << m_permanentPath <<  "temp path " << m_tempPath.c_str() << ' ' << strerror(errno) << std::endl;
 		fprintf(stderr, "%s", os.str().c_str());
 		exit(1);
 	}

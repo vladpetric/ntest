@@ -211,11 +211,11 @@ CEvaluator::CEvaluator(const std::string& fnBase, int nFiles) {
                     
                     // coeff value has first 2 bytes=coeff, 3rd byte=potmob1, 4th byte=potmob2
                     if (map<M1J) {    // pattern maps
-                        // restrict the coefficient to 2 bytes
-                        if (coeff>0x3FFF)
-                            packedCoeff=0x3FFF;
-                        if (coeff<-0x3FFF)
-                            packedCoeff=-0x3FFF;
+                        // restrict the coefficient to 11 bits
+                        if (coeff>0x3FF)
+                            packedCoeff=0x3FF;
+                        if (coeff<-0x3FF)
+                            packedCoeff=-0x3FF;
                         else
                             packedCoeff=coeff;
                         
@@ -623,6 +623,45 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += pR3[Row5];
     value += ValueTrianglePatternsJ(pcoeffs, Row7, Row6, Row5, Row4);
 #undef BB_EXTRACT_ROW_PATTERN
+    // The 0x2030486ca2f300 multiplier will perform the bit gather +
+    // base 3 conversion for the 6-long diagonal starting on bit 2, with
+    // a step of 9 bits (a.k.a. Diag 6A1).
+    // Similar multipliers can be determined for diagonals 6A2, 5A1 and 5A2.
+    // However, it is cheaper to reduce 6A2, 5A1 and 5A2 to 6A1 via a
+    // shift, rather than load a different constant every single time.
+    // The compiler reuses the constants quite effectively.
+
+    const TCoeff* const pD5 = pcoeffs+offsetJD5;
+    const TCoeff* const pD6 = pcoeffs+offsetJD6;
+    uint64_t Diag6A1 =
+        (((empty & meta_repeated_bit<uint64_t, 2, 6, 9>::value) * 0x2030486ca2f300) >> 55) +
+        2 * (((mover & meta_repeated_bit<uint64_t, 2, 6, 9>::value) * 0x2030486ca2f300) >> 55);
+    value += pD6[Diag6A1];
+    uint64_t Diag6A2 =
+        ((((empty & meta_repeated_bit<uint64_t, 16, 6, 9>::value) >> 14) * 0x2030486ca2f300) >> 55) +
+        2 * ((((mover & meta_repeated_bit<uint64_t, 16, 6, 9>::value) >> 14) * 0x2030486ca2f300) >> 55);
+    value += pD6[Diag6A2];
+
+    uint64_t Diag5A1 =
+         ((((empty & meta_repeated_bit<uint64_t, 3, 5, 9>::value) >> 1) * 0x2030486ca2f300) >> 55) +
+         2 * ((((mover & meta_repeated_bit<uint64_t, 3, 5, 9>::value) >> 1) * 0x2030486ca2f300) >> 55);
+    value += pD5[Diag5A1];
+    uint64_t Diag5A2 =
+         ((((empty & meta_repeated_bit<uint64_t, 24, 5, 9>::value) >> 22) * 0x2030486ca2f300) >> 55) +
+         2 * ((((mover & meta_repeated_bit<uint64_t, 24, 5, 9>::value) >> 22) * 0x2030486ca2f300) >> 55);
+    value += pD5[Diag5A2];
+
+    // The 0x20c49ba2000000 multiplier performs bit gather + base 3 conversion
+    // for the 5-long diagonal starting on bit 4, with a step of 7 bits 5(a.k.a.
+    // Diag5B1). Similarly, we reduce 5B2 to 5B1 via a shift.
+    uint64_t Diag5B1 =  
+         ((((empty & meta_repeated_bit<uint64_t, 4, 5, 7>::value)) * 0x20c49ba2000000) >> 57) +
+         2 * ((((mover & meta_repeated_bit<uint64_t, 4, 5, 7>::value)) * 0x20c49ba2000000) >> 57);
+    value += pD5[Diag5B1];
+    uint64_t Diag5B2 = 
+         ((((empty & meta_repeated_bit<uint64_t, 31, 5, 7>::value) >> 27) * 0x20c49ba2000000) >> 57) +
+         2 * ((((mover & meta_repeated_bit<uint64_t, 31, 5, 7>::value) >> 27) * 0x20c49ba2000000) >> 57);
+    value += pD5[Diag5B2];
 
 #define BB_EXTRACT_STEP_PATTERN(START, COUNT, STEP) \
         (base2ToBase3Table[_pext_u64(empty, meta_repeated_bit<uint64_t, (START), (COUNT), (STEP)>::value)] + \
@@ -631,17 +670,17 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(0, 8, 9)];
     value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(1, 7, 9)];
     value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(8, 7, 9)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(2, 6, 9)];
-    value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(16, 6, 9)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(3, 5, 9)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(24, 5, 9)];
+    //value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(2, 6, 9)];
+    //value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(16, 6, 9)];
+    //value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(3, 5, 9)];
+    //value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(24, 5, 9)];
     value += pcoeffs[offsetJD8 + BB_EXTRACT_STEP_PATTERN(7, 8, 7)];
     value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(6, 7, 7)];
     value += pcoeffs[offsetJD7 + BB_EXTRACT_STEP_PATTERN(15, 7, 7)];
     value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(5, 6, 7)];
     value += pcoeffs[offsetJD6 + BB_EXTRACT_STEP_PATTERN(23, 6, 7)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(4, 5, 7)];
-    value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(31, 5, 7)];
+    // value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(4, 5, 7)];
+    // value += pcoeffs[offsetJD5 + BB_EXTRACT_STEP_PATTERN(31, 5, 7)];
 #undef BB_EXTRACT_STEP_PATTERN
 
     

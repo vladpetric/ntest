@@ -74,22 +74,14 @@ public:
         return d;
 #endif
     }
-    u32 XmmHash() const {
 #if (__GNUC__ >= 4 && defined(__x86_64__)) || defined(_WIN32)
+    u32 XmmHash() const {
     	auto xmm_loaded = _mm_set_epi64x(empty, mover);
     	auto encoded = _mm_aesenclast_si128(_mm_aesenc_si128(_mm_aesenc_si128(_mm_aesenc_si128(_mm_aesenc_si128(xmm_loaded, xmm_key_1), xmm_key_2), xmm_key_3), xmm_key_4), xmm_key_5);
     	uint64_t hash =  _mm_extract_epi64(encoded, 0);
 	return (hash >> 32 | hash) & 0xffffffff;
-#else
-        u4 a, b, c, d;
-        a = u4(empty);
-        b = u4(empty >> 32);
-        c = u4(mover);
-        d = u4(mover >> 32);
-        bobLookup(a, b, c, d);
-        return d;
-#endif
     }
+#endif
     // statistics
 
     int NEmpty() const { return bitCountInt(empty); }
