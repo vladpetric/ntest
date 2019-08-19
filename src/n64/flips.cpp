@@ -19,7 +19,7 @@ int counts[8][256];
 *              1.....1.
 * If there is a mover disk in these spots, it will cause a flip.
 **/
-static uint8_t outsides[8][256];
+uint8_t outsides[8][256];
 
 /**
 * insides[index][outsideBitPattern] is the disks that will be flipped if the mover had an outside disk in the given spots.
@@ -27,7 +27,7 @@ static uint8_t outsides[8][256];
 *   O.....O. , the inside (or flipped bit pattern) will be
 *   .**.**..
 */
-static uint8_t insides[8][256];
+uint8_t insides[8][256];
 
 /**
 * rowFlips[row][insideBitPattern] is the bitboard containing the disks that will be flipped
@@ -37,14 +37,13 @@ u64 rowFlips[8][256];
 /**
 * colFlips[col][insideBitPattern] is the bitboard containing the disks that will be flipped
 */
-static u64 colFlips[8][256];
+u64 colFlips[8][256];
 
-const int nDiagonals = 11;
 /**
 * d9Flips[row-col+5][insideBitPattern] is the bitboard containing the disks that will be flipped.
 * (if row-col < 5 then we can't flip along the diagonal, so we don't store the information)
 */
-static u64 d9Flips[nDiagonals + 1][256];
+u64 d9Flips[nDiagonals + 1][256];
 
 /**
 * d7Flips[row+col-2][insideBitPattern] is the bitboard containing the disks that will be flipped.
@@ -289,7 +288,7 @@ u64 flips(int sq, u64 mover, u64 enemy) {
         u64 flip=0;
 
         const int rowIndex = rowFlipIndex(row, col, mover, enemy);
-        flip |= rowFlips[row][rowIndex];
+        flip |= static_cast<uint64_t>(rowIndex) << (row * 8);
         const int d9Index = flipIndex(col, mover, enemy, m.d9mask, m.d9mult);
         flip |= d9Flips[m.d9b][d9Index];
         const int colIndex = flipIndex(row, mover, enemy, m.colmask, m.colmult);

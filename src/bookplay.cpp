@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     try {
       mlockall(MCL_CURRENT | MCL_FUTURE);
       cout << "Done locking pages" << std::endl;
-      for (unsigned depth: {16,18,20}) {
+      for (unsigned depth: {18}) {
         dGHz = 2.8;
         maxCacheMem = 2ULL << 30; //2GiB 
         Init();
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
         fPrintCorrections = false;
         
         CPlayer* p0 = new CPlayerWithCache(cd1);
-        for (unsigned i = 0; i < 33333; ++i) {
+        for (unsigned i = 0; i < 100000; ++i) {
             CGame(p0, p0, 15 * 60, argv[1]).Play();
             cout << "\n\n\n Done with depth " << depth << " Game " << i << "\n\n" << endl;
         }

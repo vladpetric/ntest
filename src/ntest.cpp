@@ -192,7 +192,7 @@ void Test() {
     TestPos2();
     TestIsOpeningOf();
     TestSearch();
-    //GoldenValueEvalTest();
+    GoldenValueEvalTest();
     std::cerr << "Ending standard test\n";
 }
 

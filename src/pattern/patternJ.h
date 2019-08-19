@@ -10,7 +10,7 @@
 // pattern J mappings
 enum { R1J, R2J, R3J, R4J, D8J, D7J, D6J, D5J, C4J, C2x4J, C2x5J, CR1XXJ, M1J, M2J, PM1J, PM2J, PARJ };	// map numbers
 
-const int	patternToMapJ[]={
+constexpr int patternToMapJ[]={
 	// rows & cols
 	R1J, R1J, R1J, R1J,
 	R2J, R2J, R2J, R2J,
@@ -34,10 +34,10 @@ const int	patternToMapJ[]={
 	PARJ
 };	// tells which patterns are valued the same.
 
-const int	nPatternsJ=sizeof(patternToMapJ)/sizeof(int);
+constexpr int nPatternsJ=sizeof(patternToMapJ)/sizeof(int);
 
 // pattern J descriptions
-const CMap	mapsJ[]= {
+constexpr CMap mapsJ[]= {
 	{kORID,8}, {kORID,8}, {kORID,8}, {kORID,8}, // rows & cols
 	{kORID,8}, {kORID,7}, {kORID,6}, {kORID,5},  {kCRID, 10}, // diags
 	{kBase3, 8}, {kBase3, 10}, {kORID, 10},		// corner patterns: 2x4, 2x5, edge+2X
@@ -46,6 +46,6 @@ const CMap	mapsJ[]= {
 	{kNumber, 2}								//  parity
 };
 
-const int	nMapsJ=sizeof(mapsJ)/sizeof(CMap);
+constexpr int nMapsJ=sizeof(mapsJ)/sizeof(CMap);
 
 #endif  //_H_PATTERNJ

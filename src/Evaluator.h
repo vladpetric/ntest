@@ -59,9 +59,8 @@ protected:
     static std::string FNBase(char evaluatorType, char coeffSet);
 
 private:
-    CEvaluator(const std::string& fnBase, int nFiles);
+    CEvaluator(const std::string& fnBase);
     TCoeff *coeffs[60];
-    TCoeff *pcoeffs[60];
     int nSets;
 };
 

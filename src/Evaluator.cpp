@@ -32,6 +32,8 @@ typedef uint64_t TConfig;
 #define INLINE_HINT inline
 typedef unsigned long TConfig;
 #endif
+constexpr int nFiles = 10;
+constexpr int nSetWidth=60/nFiles;
 
 class CEvaluatorList: public std::map<CEvaluatorInfo, CEvaluator*> {
 public:
@@ -56,15 +58,9 @@ CEvaluator* CEvaluator::FindEvaluator(char evaluatorType, char coeffSet) {
 
     ptr=evaluatorList.find(evaluatorInfo);
     if (ptr==evaluatorList.end()) {
-        switch(evaluatorType) {
-        case 'J': {
-            int nFiles= (coeffSet>='9')?10:6;
-            result=new CEvaluator(FNBase(evaluatorType, coeffSet), nFiles);
-            break;
-                  }
-        default:
-            assert(0);
-        }
+        assert(evaluatorType == 'J');
+        assert(coeffSet >= '9');
+        result = new CEvaluator(FNBase(evaluatorType, coeffSet));
         assert(result);
         evaluatorList[evaluatorInfo]=result;
     }
@@ -125,7 +121,7 @@ static void ConvertFile(FILE*& fp, std::string fn, int& iVersion, u4& fParams) {
 //! If the file's fParams is 100, coefficients are stored as u2s and are in units of centistones.
 //!
 //! \throw string if error
-CEvaluator::CEvaluator(const std::string& fnBase, int nFiles) {
+CEvaluator::CEvaluator(const std::string& fnBase) {
     int map,  iFile, coeffStart, packedCoeff;
     int nIDs, nConfigs, id, config, cid;
     uint32_t configpm1, configpm2, mapsize;
@@ -133,10 +129,10 @@ CEvaluator::CEvaluator(const std::string& fnBase, int nFiles) {
     float* rawCoeffs=0;    //!< for use with raw (float) coeffs
     i2* i2Coeffs=0;        //!< for use with converted (packed) coeffs
     TCoeff coeff;
-    int iSubset, nSubsets, nEmpty;
+    int iSubset, nSubsets;
+    // int nEmpty;
 
     // some parameters are set based on the Evaluator version number
-    int nSetWidth=60/nFiles;
     char cCoeffSet=fnBase.end()[-1];
 
 
@@ -212,10 +208,10 @@ CEvaluator::CEvaluator(const std::string& fnBase, int nFiles) {
                     // coeff value has first 2 bytes=coeff, 3rd byte=potmob1, 4th byte=potmob2
                     if (map<M1J) {    // pattern maps
                         // restrict the coefficient to 11 bits
-                        if (coeff>0x3FF)
-                            packedCoeff=0x3FF;
-                        if (coeff<-0x3FF)
-                            packedCoeff=-0x3FF;
+                        if (coeff>0x3FFF)
+                            packedCoeff=0x3FFF;
+                        if (coeff<-0x3FFF)
+                            packedCoeff=-0x3FFF;
                         else
                             packedCoeff=coeff;
                         
@@ -266,14 +262,6 @@ CEvaluator::CEvaluator(const std::string& fnBase, int nFiles) {
             // zero out 2x4 coefficients
             for (config=0;config<6561; config++) {
                 pcf2x4[config]=0;
-            }
-
-            // Set the pcoeffs array and the fParameters
-            for (nEmpty=59-nSetWidth*iFile; nEmpty>=50-nSetWidth*iFile; nEmpty--) {
-                // if this is a set of the wrong parity, do nothing
-                if ((nEmpty&1)==iSubset)
-                    continue;
-                pcoeffs[nEmpty]=coeffs[nSets];
             }
 
             nSets++;
@@ -380,8 +368,10 @@ static INLINE_HINT TCoeff ValueTrianglePatternsJ(const TCoeff* pcmove, TConfig c
 // pos2 evaluators
 __attribute__((target("default")))
 CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent) const {
-    CBitBoard bb = pos2.GetBB();
-    TCoeff *const pcoeffs = this->pcoeffs[pos2.NEmpty()];
+    CBitBoard bb = pos2.GetBB(); 
+    auto nempty = pos2.NEmpty();
+    const auto* pcoeffs = coeffs[2 * ((59 - nempty) / 6) + ((59 - nempty) & 1)];
+
 // This function implements a linear pattern evaluator. 
 //
 // Most of the work is in extracting base-3 patterns such as rows, columns,
@@ -425,7 +415,7 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += (ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP) +
               ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO) +
     // parity
-              ConfigValue(pcoeffs, pos2.NEmpty()&1, PARJ, offsetJPAR)) << 16;
+              ConfigValue(pcoeffs, nempty&1, PARJ, offsetJPAR)) << 16;
 
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;
@@ -576,7 +566,8 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
 __attribute__((target("bmi2")))
 CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent) const {
     CBitBoard bb = pos2.GetBB();
-    const TCoeff *const pcoeffs = this->pcoeffs[pos2.NEmpty()];
+    auto nempty = pos2.NEmpty();
+    const auto* pcoeffs = coeffs[2 * ((59 - nempty) / 6) + 1 - (nempty & 1)];
     // This is a specialization of the Evaluator using the bmi2 pext instruction (_pext_u64)
 
     // Value has a lower 16 bit component and a higher one. The lower bits are used to
@@ -587,7 +578,7 @@ CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent
     value += (ConfigValue(pcoeffs, nMovesPlayer, M1J, offsetJMP) +
               ConfigValue(pcoeffs, nMovesOpponent, M2J, offsetJMO) +
     // parity
-              ConfigValue(pcoeffs, pos2.NEmpty()&1, PARJ, offsetJPAR)) << 16;
+              ConfigValue(pcoeffs, nempty&1, PARJ, offsetJPAR)) << 16;
 
     uint64_t empty = bb.empty;
     uint64_t mover = bb.mover;

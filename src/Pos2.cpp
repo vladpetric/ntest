@@ -57,7 +57,7 @@ void Pos2::Initialize(const CBitBoard& m_bb, bool m_fBlackMove) {
 
 void Pos2::MakeMoveBB(int square) {
     u64 flip = flips(square, m_bb.mover, ~(m_bb.mover | m_bb.empty)) | mask(square);
-    assert ((m_stable & flip) == 0);
+    // assert ((m_stable & flip) == 0);
     m_bb.empty ^= mask(square);
     m_bb.mover ^= flip;
 

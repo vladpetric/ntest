@@ -14,5 +14,13 @@ u64 flips(int sq, u64 mover, u64 enemy);
 u64 flips(int sq, u64 mover, u64 enemy);
 #endif
 extern u64 neighbors[64];
+extern uint8_t outsides[8][256];
+extern uint8_t insides[8][256];
+extern int counts[8][256];
+extern u64 rowFlips[8][256];
+extern u64 colFlips[8][256];
+const int nDiagonals = 11;
+extern u64 d9Flips[nDiagonals + 1][256];
+extern u64 d7Flips[nDiagonals + 1][256];
 
 #endif
