@@ -17,11 +17,9 @@ You should be able to easily install it if you already have a recent Ruby (>= 2.
 
 Then:
 
-``
-cd src/
+``cd src/``
 
-akro release/ntest.exe
-``
+``akro release/ntest.exe``
 
 To quickly run a benchmark:
 
