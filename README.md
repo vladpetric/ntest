@@ -3,12 +3,30 @@ Ntest is a strong othello program. It can be used in command-line mode or using 
 
 Requirements:
 
-* 64-bit Windows, Mac, or Linux
-* popcnt instruction  
-This is available on most Intel CPUs since 2009 and AMD systems since 2008. You will get an error message if trying to run on a computer without popcnt.
+* Windows, Mac, or Linux.
+* On x86, popcnt instruction. This is available on most Intel CPUs since 2009 and AMD systems since 2008. You will get an error message if trying to run on a computer without popcnt.
+* 64 bit builds are highly recommended, though 32 bit builds should work as well.
 
-32-bit NTest is no longer maintained but it is available as the very first commit in this repository: a0949a58df442b1d7f65b70156e22758bdf5fdca . On a 64-bit machine it goes about 2/3 as fast as 64-bit NTest.
-It can also be used on machines without popcnt.
+# Building and quickly running a benchmark
+
+The preferred way of building ntest is through akro build, a C++ build system that I (Vlad Petric) developed.
+
+You should be able to easily install it if you already have a recent (> 2.2) Ruby installation as follows:
+
+gem install akro
+
+Then:
+
+cd src/
+akro release/ntest.exe
+
+To quickly run a benchmark:
+
+./release/ntest.exe t
+
+The benchmark tests both the solver (from 26 empties), and the midgame searcher (36 empties, depth of 26).
+
+For x86 builds, cmake should work as well. See BuildREADME.txt
 
 ## Other Resources
 
