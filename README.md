@@ -11,18 +11,20 @@ Requirements:
 
 The preferred way of building ntest is through akro build, a C++ build system that I (Vlad Petric) developed.
 
-You should be able to easily install it if you already have a recent (> 2.2) Ruby installation as follows:
+You should be able to easily install it if you already have a recent Ruby (>= 2.2)  as follows:
 
-gem install akro
+``gem install akro``
 
 Then:
 
+``
 cd src/
 akro release/ntest.exe
+``
 
 To quickly run a benchmark:
 
-./release/ntest.exe t
+``./release/ntest.exe t``
 
 The benchmark tests both the solver (from 26 empties), and the midgame searcher (36 empties, depth of 26).
 
