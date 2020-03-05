@@ -19,6 +19,7 @@ Then:
 
 ``
 cd src/
+
 akro release/ntest.exe
 ``
 
