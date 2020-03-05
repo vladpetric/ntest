@@ -1,7 +1,7 @@
 if Gem.win_platform?
   # Need to have mingw-x64 installed
   $COMPILER = "g++"
-  $COMPILE_FLAGS = "-m64 -std=c++1y -pthread -Wall -msse4.2 -I."
+  $COMPILE_FLAGS = "-m64 -std=c++14 -pthread -Wall -msse4.2 -I."
   $ADDITIONAL_LINK_FLAGS = "-lws2_32"
 else
   akro_multitask()
@@ -12,9 +12,11 @@ else
   if system =~ /Linux/
     if machine =~ /^arm/
       $COMPILER = "clang++"
-      $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror -Wno-error=deprecated-declarations"
+      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror -Wno-error=deprecated-declarations"
     elsif machine =~ /^x86/ || machine =~ /^amd64/
-      $COMPILE_FLAGS = "-std=c++1y -pthread -Wall -Werror -msse4.2 -I."
+      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -maes -I. -mbmi2"
+    elsif machine =~ /^aarch64/
+      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -I."
     else
       puts "Unknown machine #{machine}"
     end

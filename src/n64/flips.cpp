@@ -279,7 +279,9 @@ struct dflip {
 	uint64_t d9mask;
 	uint64_t d7mask;
 };
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
 __attribute__((target("default")))
+#endif
 u64 flips(int sq, u64 mover, u64 enemy) {
     if (neighbors[sq]&enemy) {
         const struct magicFlip &m = flipArray[sq];

@@ -378,7 +378,9 @@ static INLINE_HINT TCoeff ValueTrianglePatternsJ(const TCoeff* pcmove, TConfig c
 
 
 // pos2 evaluators
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__MINGW32__)
 __attribute__((target("default")))
+#endif
 CValue CEvaluator::EvalMobs(const Pos2& pos2, u4 nMovesPlayer, u4 nMovesOpponent) const {
     CBitBoard bb = pos2.GetBB();
     TCoeff *const pcoeffs = this->pcoeffs[pos2.NEmpty()];
