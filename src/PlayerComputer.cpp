@@ -127,7 +127,7 @@ CPlayerComputer::~CPlayerComputer() {
 }
 
 u4 CPlayerComputer::LogCacheSize(CCalcParams* pcp, int aPrune) {
-  return 23;
+  return 21;
   /*
 	u2 lgCacheSize;
 	

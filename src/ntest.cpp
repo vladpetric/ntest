@@ -307,7 +307,7 @@ int main(int argc, char**argv, char**envp) {
 
     	if (mode==kSpeedTest) {
     		PrintStuff(false);
-    		TestMoveSpeed(cd1.MinutesOrDepth(), nGames, argv[1]+1);
+    		TestMoveSpeed(cd1.MinutesOrDepth());
     	}
 
     	///////////////////////////////////////////
