@@ -209,64 +209,10 @@ void TestLogStuff(int hMax) {
     computer.pcp=pcpOld;
 }
 
-void FFOTest() {
-    double tRun, tTotal;
-    CNodeStats start, end, start1, end1;
-    CQPosition pos;
-    CHeightInfo hi(0,0,false);
-    CMVK mvk;
-    char buf[NN+1], c;
-    string s;
-    CComputerDefaults cd;
-
-    std::ifstream ifs("ffotest.scr");
-
-    // setup computer
-    CPlayerComputer computer(cd);
-
-    // initialize stats
-    start.Read();
-    tTotal=0;
-
-    // print header info
-    cout << "Testing FFO WLD solving\n";
-
-    while (ifs>>buf>>c) {
-        // comment
-        getline(ifs,s);
-        cout << "\n" << s << "\n";
-
-        // setup board
-        pos.Initialize(buf,TextToValue(c)==BLACK);
-        //pos.Print();
-        computer.Clear();
-
-        // get initial time
-        start1.Read();
-
-        // calc move and value
-        CSearchInfo si=computer.DefaultSearchInfo(pos.BlackMove(),CSearchInfo::kNeedMove+CSearchInfo::kNeedValue,1e6,0);
-        computer.GetChosen(si, pos, mvk, true);
-
-        // calc timing
-        end1.Read();
-        tRun=(end1-start1).Seconds();
-        tTotal+=tRun;
-
-        // print info
-        cout << tRun << "s\t" << mvk << "\n";
-        cerr << "s";
-    }
-
-    // print results
-    end.Read();
-    tRun=(end-start).Seconds();
-    cout << "Run complete in " << tRun << "s\n";
-}
 
 void TestMoveSpeed(int end_depth, int mid_depth) {
     const int hEndgame=end_depth;
-    TestMidgameSpeed(hEndgame, CHeightInfo(hEndgame-hSolverStart,0,true), 12, kPrintTestHeader);
+    TestMidgameSpeed(hEndgame, CHeightInfo(hEndgame-hSolverStart,0,true), 1000, kPrintTestHeader);
     const int hMidgame=mid_depth;
-    TestMidgameSpeed(36, CHeightInfo(hMidgame,4,false), 12, kPrintTestHeader);
+    TestMidgameSpeed(36, CHeightInfo(hMidgame,4,false), 1000, kPrintTestHeader);
 }

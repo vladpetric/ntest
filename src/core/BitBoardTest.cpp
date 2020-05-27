@@ -178,7 +178,7 @@ void TestBitBoard() {
 std::vector<COsGame> LoadTestGames() {
 	std::vector<COsGame> sgTest;
 
-	std::string fn="TestGames.ggf";
+	std::string fn="Othello.154.ggf";
 	std::ifstream is(fn.c_str());
 	if (!is){
 		std::cerr << "Can't open test games file " << fn << "\n";
