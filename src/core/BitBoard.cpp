@@ -7,6 +7,7 @@
 
 #include <cstring>
 
+#include <iomanip>
 #include "BitBoard.h"
 #include "Moves.h"
 #include "../n64/types.h"
@@ -111,26 +112,26 @@ void CBitBoard::Print(bool fBlackMove) const {
     FPrint(stdout, fBlackMove);
 }
 
-void CBitBoard::FPrintHeader(FILE* fp) const {
+void CBitBoard::FPrintHeader(std::stringstream &ss) const {
     int col;
-
-    fprintf(fp,"  ");
+    ss << "  ";
     for (col=0; col<N; col++)
-    	fprintf(fp, " %c", 'A'+col);
-    fprintf(fp, "\n");
+        ss << " " << static_cast<char>('A' + col);
+    ss << "\n";
 }
 
 void CBitBoard::FPrint(FILE* fp, bool fBlackMove) const {
     int row,col;
     u2 e,b;
     int value;
+    std::stringstream ss;
 
-    fprintf(fp, "\n");
+    ss << "\n";
 
     // print the board
-    FPrintHeader(fp);
+    FPrintHeader(ss);
     for (row=0; row<N; row++) {
-    	fprintf(fp, "%2d ",row+1);
+    	ss << std::setw(2) << row + 1 << " ";
     	e=u1(empty >> row*8);
     	b=u1(mover >> row*8);
     	if (!fBlackMove)
@@ -142,16 +143,20 @@ void CBitBoard::FPrint(FILE* fp, bool fBlackMove) const {
     			value=(b&1)?BLACK:WHITE;
     		e>>=1;
     		b>>=1;
-    		fprintf(fp, "%c ",ValueToText(value));
+    		ss << ValueToText(value) << " ";
     	}
-    	fprintf(fp, "%2d\n",row+1);
+    	ss << std::setw(2) << row + 1 << "\n";
     }
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
     // disc info
     int nEmpty, nBlack, nWhite;
     NDiscs(fBlackMove, nBlack, nWhite, nEmpty);
-    fprintf(fp,"Black: %d  White: %d  Empty: %d\n", nBlack, nWhite, nEmpty);
+    ss << "Black: " << nBlack << "  White: " << nWhite << "  Empty: " << nEmpty << "\n";
+
+    // Write the entire buffer to the file at once
+    std::string output = ss.str();
+    fwrite(output.c_str(), 1, output.size(), fp);
 }
 
 //! Output the bitboard to a char buffer, and return the char buffer plus a terminal '\0'

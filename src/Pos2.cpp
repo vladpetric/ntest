@@ -88,8 +88,8 @@ void Pos2::MakeMoveBB(int square) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // debug stuff
-void FPrintHeader(FILE* fp);
-void FPrintRow(FILE* fp, int row, int pattern, int nColors[3]);
+void FPrintHeader(std::stringstream &ss);
+void FPrintRow(std::stringstream &ss, int row, int pattern, int nColors[3]);
 void PrintSquareDirectionToPattern();
 void PrintSquareDirectionToValue();
 
@@ -99,8 +99,9 @@ void Pos2::Print() const {
 
 void Pos2::FPrint(FILE* fp) const {
     int row, nColors[3];
+    std::stringstream ss;
 
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
     uint64_t black;
     if (this->BlackMove()) {
@@ -115,14 +116,18 @@ void Pos2::FPrint(FILE* fp) const {
                 base2ToBase3Table[(m_bb.empty >> (row * 8))& 0xff] +
                 base2ToBase3Table[(black >> (row * 8))& 0xff] * 2;
 
-        FPrintRow(fp, row, rowPattern, nColors);
+        FPrintRow(ss, row, rowPattern, nColors);
     }
 
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
-    fprintf(fp, "\nBlack: %d  White: %d  Empty: %d\n\n",nColors[2],nColors[0],nColors[1]);
-    fprintf(fp, "%s to move\n",m_fBlackMove?"Black":"White");
+    ss << "\nBlack: " << nColors[2] << "  White: " << nColors[0] << "  Empty: " << nColors[1] << "\n\n";
+    ss << (m_fBlackMove ? "Black" : "White") << " to move\n";
+
+    std::string output = ss.str();
+    fwrite(output.c_str(), 1, output.size(), fp);
 }
+
 void Pos2::PrintStable() const {
     FPrintStable(stdout);
 }
@@ -131,57 +136,65 @@ void Pos2::PrintStableNext() const {
 }
 void Pos2::FPrintStable(FILE* fp) const {
     int row, nColors[3];
+    std::stringstream ss;
 
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
     nColors[0]=nColors[1]=nColors[2]=0;
     for (row=0; row<N; row++) {
         uint64_t bitrow = (m_stable >> (row * 8))& 0xff;
         // print row number
-        fprintf(fp, "%-2d", row+1);
+        ss << std::setw(2) << row + 1;
 
         // break row apart into values and print value
         for (int col=0; col<N; col++) {
             auto item = bitrow & 1;
             bitrow >>= 1;
-            fprintf(fp, "%c ", item? 'X' : '-');
+            ss << " " << (item ? 'X' : '-');
         }
 
         //print row number at right of row
-        fprintf(fp, "%2d\n", row+1);
+        ss << " " << std::setw(2) << row + 1 << "\n";
     }
 
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
-    fprintf(fp, "\nBlack: %d  White: %d  Empty: %d\n\n",nColors[2],nColors[0],nColors[1]);
-    fprintf(fp, "%s to move\n",m_fBlackMove?"Black":"White");
+    ss << "\nBlack: " << nColors[2] << "  White: " << nColors[0] << "  Empty: " << nColors[1] << "\n\n";
+    ss << (m_fBlackMove ? "Black" : "White") << " to move\n";
+
+    std::string output = ss.str();
+    fwrite(output.c_str(), 1, output.size(), fp);
 }
 void Pos2::FPrintStableNext(FILE* fp) const {
     int row, nColors[3];
+    std::stringstream ss;
 
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
     nColors[0]=nColors[1]=nColors[2]=0;
     for (row=0; row<N; row++) {
         uint64_t bitrow = (m_stable_trigger >> (row * 8))& 0xff;
         // print row number
-        fprintf(fp, "%-2d", row+1);
+        ss << std::setw(2) << row + 1;
 
-        // break row apart into values and print value
+        // break row apart into values and accumulate value
         for (int col=0; col<N; col++) {
             auto item = bitrow & 1;
             bitrow >>= 1;
-            fprintf(fp, "%c ", item? 'X' : '-');
+            ss << " " << (item ? 'X' : '-');
         }
 
         //print row number at right of row
-        fprintf(fp, "%2d\n", row+1);
+        ss << " " << std::setw(2) << row + 1 << "\n";
     }
 
-    FPrintHeader(fp);
+    FPrintHeader(ss);
 
-    fprintf(fp, "\nBlack: %d  White: %d  Empty: %d\n\n",nColors[2],nColors[0],nColors[1]);
-    fprintf(fp, "%s to move\n",m_fBlackMove?"Black":"White");
+    ss << "\nBlack: " << nColors[2] << "  White: " << nColors[0] << "  Empty: " << nColors[1] << "\n\n";
+    ss << (m_fBlackMove ? "Black" : "White") << " to move\n";
+
+    std::string output = ss.str();
+    fwrite(output.c_str(), 1, output.size(), fp);
 }
 
 char* Pos2::GetText(char* sBoard) const {
@@ -214,31 +227,30 @@ char* Pos2::GetText(char* sBoard) const {
 // Debug and print functions - protected
 ///////////////////////////////////////////////////////////////////
 
-void FPrintHeader(FILE* fp) {
+void FPrintHeader(std::stringstream &ss) {
     int col;
-
-    fprintf(fp, "  ");
+    ss << "  ";
     for (col=0; col<N; col++)
-        fprintf(fp, "%c ",col+'A');
-    fprintf(fp, "\n");
+        ss << " " << static_cast<char>('A' + col);
+    ss << "\n";
 }
 
-void FPrintRow(FILE* fp, int row, int config, int nColors[3]) {
+void FPrintRow(std::stringstream &ss, int row, int config, int nColors[3]) {
     int col, item;
 
     // print row number
-    fprintf(fp, "%-2d", row+1);
+    ss << std::setw(2) << row + 1;
 
     // break row apart into values and print value
     for (col=0; col<N; col++) {
-        item=config%3;
+        item = config%3;
         config=(config-item)/3;
-        fprintf(fp, "%c ",ValueToText(item));
+        ss << " " << ValueToText(item);
         nColors[item]++;
     }
 
     //print row number at right of row
-    fprintf(fp, "%2d\n", row+1);
+    ss << " " << std::setw(2) << row + 1 << "\n";
 }
 
 // CalcMovesAndPass - calc moves. decide if the mover needs to pass, and pass if he does
