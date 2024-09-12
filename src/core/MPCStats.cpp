@@ -105,13 +105,11 @@ CMPCStats::CMPCStats(const char* fnStats, int anPrunes) {
     					nDataPoints++;
     				}
     			}
-    			if (nDataPoints>1) {
+    			if (nDataPoints>20) {
     				c=xy/xx;
     				sigma=sqrt((yy-xy*xy/xx)/(nDataPoints-1));
-    				if (nDataPoints>20) {
-    					sds[0][height][nEmpty][nCut]=float(sigma);
-    					crs[height][nEmpty][nCut]=float(1/c);
-    				}
+    				sds[0][height][nEmpty][nCut]=float(sigma);
+    				crs[height][nEmpty][nCut]=float(1/c);
     			}
     		}
     	}
