@@ -25,7 +25,8 @@ CMPCStats::CMPCStats(const char* fnStats, int anPrunes) {
     char separator;
     int nRead, nRows, dummy, row, col, height, nCut, nDataPoints = 0, iPrune, iVersion;
     int iStartCol;
-    double xx = 0.0, xy = 0.0, yy = 0.0, c, sigma;
+    double xx = 0.0, xy = 0.0, yy = 0.0;
+    float c = 0.0, sigma = 0.0;
 
     // open stats file
     fpStats=fopen(fnStats,"r");
@@ -105,13 +106,10 @@ CMPCStats::CMPCStats(const char* fnStats, int anPrunes) {
     					nDataPoints++;
     				}
     			}
-    			if (nDataPoints>1) {
-    				c=xy/xx;
+    			if (nDataPoints>20) {
     				sigma=sqrt((yy-xy*xy/xx)/(nDataPoints-1));
-    				if (nDataPoints>20) {
-    					sds[0][height][nEmpty][nCut]=float(sigma);
-    					crs[height][nEmpty][nCut]=float(1/c);
-    				}
+    				sds[0][height][nEmpty][nCut]=sigma;
+    				crs[height][nEmpty][nCut]=xx/xy;
     			}
     		}
     	}
@@ -127,8 +125,8 @@ CMPCStats::CMPCStats(const char* fnStats, int anPrunes) {
     				c=crs[height][nEmpty][nCut];
     			}
     			else {
-    				sds[0][height][nEmpty][nCut]=float(sigma);
-    				crs[height][nEmpty][nCut]=float(c);
+    				sds[0][height][nEmpty][nCut]=sigma;
+    				crs[height][nEmpty][nCut]=c;
     			}
     		}
     	}
