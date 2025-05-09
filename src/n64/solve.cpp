@@ -277,7 +277,7 @@ inline int orderMoves(int moveScores[], int alpha, int beta, u64 mover, u64 enem
 		if (bitSet(sq, moverMobility)) {
 			const int index = int(empty - search->emptyArray);
 
-			int score = -enemyPostMoveMobilityCount(sq, mover, enemy)<<8;
+			int score = -(enemyPostMoveMobilityCount(sq, mover, enemy)<<8);
 			score+=hashCutsOff(alpha, beta, mover, enemy, search)<<15;
 			score+= bit(sq, corners)<<7;
 			score += bit(sq, parity)<<5;
