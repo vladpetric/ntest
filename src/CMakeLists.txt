@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 3.5)
 
 project(ntest)
 
@@ -53,6 +53,11 @@ target_link_libraries(allpos mainlib core game patterns odk n64)
 add_test(ntest_basic ntest o)
 
 if(${UNIX})
-    EXEC_PROGRAM(ln ARGS -sf "../src/resource/*"
-                 "${CMAKE_BINARY_DIR}")
+    # Copy resource files to build directory
+    file(COPY "${CMAKE_SOURCE_DIR}/resource/solver12.txt" DESTINATION "${CMAKE_BINARY_DIR}/resource")
+    file(COPY "${CMAKE_SOURCE_DIR}/resource/resource/" DESTINATION "${CMAKE_BINARY_DIR}/resource")
+    file(COPY "${CMAKE_SOURCE_DIR}/TestGames.ggf" DESTINATION "${CMAKE_BINARY_DIR}")
+    file(COPY "${CMAKE_SOURCE_DIR}/parameters.txt" DESTINATION "${CMAKE_BINARY_DIR}")
+    file(COPY "${CMAKE_SOURCE_DIR}/coefficients/" DESTINATION "${CMAKE_BINARY_DIR}/coefficients")
+    file(COPY "${CMAKE_SOURCE_DIR}/../resource/coefficients/" DESTINATION "${CMAKE_BINARY_DIR}/coefficients")
 endif()

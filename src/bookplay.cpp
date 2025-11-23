@@ -6,69 +6,74 @@
 #include <sys/mman.h>
 
 #include <cstdlib>
-#include <fstream>
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
-#include "core/CalcParams.h"
+#include "Evaluator.h"
+#include "PlayerComputer.h"
+#include "SmartBook.h"
 #include "core/Book.h"
 #include "core/Cache.h"
+#include "core/CalcParams.h"
 #include "core/MPCStats.h"
-#include "game/Player.h"
 #include "game/Game.h"
+#include "game/Player.h"
 #include "n64/flips.h"
 #include "n64/utils.h"
 #include "options.h"
 #include "pattern/FastFlip.h"
 #include "pattern/Patterns.h"
-#include "Evaluator.h"
-#include "PlayerComputer.h"
-#include "SmartBook.h"
 
 using namespace std;
 
 static CCache big_cache(16777216); // 512 MiB
 
-class CPlayerWithCache:  public CPlayerComputer {
+class CPlayerWithCache : public CPlayerComputer {
 public:
-  CPlayerWithCache(const CComputerDefaults& acd) {
-    cd=acd;
-    pcp=CCalcParams::NewFromString(cd.sCalcParams);
+  CPlayerWithCache(const CComputerDefaults &acd) {
+    cd = acd;
+    pcp = CCalcParams::NewFromString(cd.sCalcParams);
+#ifdef __linux__
     madvise(big_cache.buckets, sizeof(CCacheData) * big_cache.nBuckets,
-        MADV_HUGEPAGE);
+            MADV_HUGEPAGE);
+#endif
 
-    caches[0]=caches[1]=NULL;
-    fHasCachedPos[0]=fHasCachedPos[1]=false;
+    caches[0] = caches[1] = NULL;
+    fHasCachedPos[0] = fHasCachedPos[1] = false;
     std::cout << "status Loading book" << std::endl;
-    book=(cd.booklevel!=CComputerDefaults::kNoBook) ? CSmartBook::FindBook(cd.cEval, cd.cCoeffSet, pcp) : NULL;
-    eval=CEvaluator::FindEvaluator(cd.cEval, cd.cCoeffSet);
-    mpcs=CMPCStats::GetMPCStats(cd.cEval, cd.cCoeffSet, std::max(cd.iPruneMidgame, cd.iPruneEndgame));
-    fAnalyzingDeferred=false;
+    book = (cd.booklevel != CComputerDefaults::kNoBook)
+               ? CSmartBook::FindBook(cd.cEval, cd.cCoeffSet, pcp)
+               : NULL;
+    eval = CEvaluator::FindEvaluator(cd.cEval, cd.cCoeffSet);
+    mpcs = CMPCStats::GetMPCStats(cd.cEval, cd.cCoeffSet,
+                                  std::max(cd.iPruneMidgame, cd.iPruneEndgame));
+    fAnalyzingDeferred = false;
 
     // get saved-game file name
     std::ostringstream os;
-    os << fnBaseDir << "results/" << cd.cEval << cd.cCoeffSet << '_' << *pcp << ".ggf";
-    m_fnSaveGame=os.str();
-    
-    toot=false;
-    
+    os << fnBaseDir << "results/" << cd.cEval << cd.cCoeffSet << '_' << *pcp
+       << ".ggf";
+    m_fnSaveGame = os.str();
+
+    toot = false;
+
     // calculate computer's name
     std::ostringstream osName;
     pcp->Name(osName);
-    m_sName=osName.str();
+    m_sName = osName.str();
 
-    if (!mpcs) cd.iPruneMidgame=cd.iPruneEndgame=0;
-
+    if (!mpcs)
+      cd.iPruneMidgame = cd.iPruneEndgame = 0;
 
     std::cout << "status Negamaxing book" << std::endl;
-    SetupBook(cd.booklevel==CComputerDefaults::kNegamaxBook);
+    SetupBook(cd.booklevel == CComputerDefaults::kNegamaxBook);
     std::cout << "status" << std::endl;
   }
+
 protected:
-  CCache* GetCache(int iCache) override {
-    return &big_cache;
-  }
+  CCache *GetCache(int iCache) override { return &big_cache; }
 };
 
 void Init() {
@@ -87,54 +92,54 @@ void Init() {
 }
 
 // To satisfy linker in debug mode
-bool HasInput() {
-    return false;
-}
+bool HasInput() { return false; }
 
 int main(int argc, char **argv) {
-    cout << "Ntest version as of " << __DATE__ << "\n";
-    cout << "Copyright 1999-2014 Chris Welty and Vlad Petric\nAll Rights Reserved\n\n";
-    if (argc != 2) {
-      cerr << "Usage: " << argv[0] << " <initial file>"  << std::endl;
-    }
-    try {
-      mlockall(MCL_CURRENT | MCL_FUTURE);
-      cout << "Done locking pages" << std::endl;
-      for (unsigned depth: {26}) {
-        dGHz = 2.8;
-        maxCacheMem = 2ULL << 30; //2GiB 
-        Init();
-        CComputerDefaults cd1;
-        char buff[5];
-        snprintf(buff, 5, "s%d", depth);
-        cd1.sCalcParams = buff;
-        cd1.cEval = 'J';
-        cd1.cCoeffSet = 'A';
-        cd1.vContempts[0] = 0;
-        cd1.vContempts[1] = 0;
-        cd1.iPruneEndgame = 5;
-        cd1.iPruneMidgame = 4;
-        cd1.nRandShifts[0] = 2;
-        cd1.nRandShifts[1] = 2;
-        cd1.iEdmund = 1;
-        cd1.fsPrint = 0;
-        cd1.fsPrintOpponent = 0;
-        cd1.booklevel = CComputerDefaults::kBook;
+  cout << "Ntest version as of " << __DATE__ << "\n";
+  cout << "Copyright 1999-2014 Chris Welty and Vlad Petric\nAll Rights "
+          "Reserved\n\n";
+  if (argc != 2) {
+    cerr << "Usage: " << argv[0] << " <initial file>" << std::endl;
+  }
+  try {
+    mlockall(MCL_CURRENT | MCL_FUTURE);
+    cout << "Done locking pages" << std::endl;
+    for (unsigned depth : {26}) {
+      dGHz = 2.8;
+      maxCacheMem = 2ULL << 30; // 2GiB
+      Init();
+      CComputerDefaults cd1;
+      char buff[5];
+      snprintf(buff, 5, "s%d", depth);
+      cd1.sCalcParams = buff;
+      cd1.cEval = 'J';
+      cd1.cCoeffSet = 'A';
+      cd1.vContempts[0] = 0;
+      cd1.vContempts[1] = 0;
+      cd1.iPruneEndgame = 5;
+      cd1.iPruneMidgame = 4;
+      cd1.nRandShifts[0] = 2;
+      cd1.nRandShifts[1] = 2;
+      cd1.iEdmund = 1;
+      cd1.fsPrint = 0;
+      cd1.fsPrintOpponent = 0;
+      cd1.booklevel = CComputerDefaults::kBook;
 
-        fPrintExtensionInfo = false;
-        fPrintBoard = false;
-        fPrintAbort = false;
-        extern bool fPrintCorrections;
-        fPrintCorrections = false;
-        
-        CPlayer* p0 = new CPlayerWithCache(cd1);
-        for (unsigned i = 0; i < 33333; ++i) {
-            CGame(p0, p0, 15 * 60, argv[1]).Play();
-            cout << "\n\n\n Done with depth " << depth << " Game " << i << "\n\n" << endl;
-        }
-        delete p0;
+      fPrintExtensionInfo = false;
+      fPrintBoard = false;
+      fPrintAbort = false;
+      extern bool fPrintCorrections;
+      fPrintCorrections = false;
+
+      CPlayer *p0 = new CPlayerWithCache(cd1);
+      for (unsigned i = 0; i < 33333; ++i) {
+        CGame(p0, p0, 15 * 60, argv[1]).Play();
+        cout << "\n\n\n Done with depth " << depth << " Game " << i << "\n\n"
+             << endl;
+      }
+      delete p0;
     }
-  } catch(std::string exception) {
+  } catch (std::string exception) {
     cout << exception << "\n";
     return -1;
   }
