@@ -159,12 +159,17 @@ CEvaluator::CEvaluator(const std::string& fnBase, int nFiles) {
 
         // read in version and parameter info
         u4 fParams;
-        assert(fread(&iVersion, sizeof(iVersion), 1, fp) == 1);
-        assert(fread(&fParams, sizeof(fParams), 1, fp) == 1);
+        if (fread(&iVersion, sizeof(iVersion), 1, fp) != 1 ||
+            fread(&fParams, sizeof(fParams), 1, fp) != 1) {
+            std::cerr << "Evaluator: failed to read header from " << fn << std::endl;
+            throw std::string("error reading from coefficients file ")+fnBase;
+        }
         if (iVersion==1 && fParams==14) {
             ConvertFile(fp, fn, iVersion, fParams);
         }
         if (iVersion!=1 || (fParams!=100)) {
+            std::cerr << "Evaluator: bad coeff header in " << fn
+                      << " iVersion=" << iVersion << " fParams=" << fParams << std::endl;
             throw std::string("error reading from coefficients file ")+fnBase;
         }
 
