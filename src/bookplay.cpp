@@ -35,8 +35,10 @@ public:
   CPlayerWithCache(const CComputerDefaults& acd) {
     cd=acd;
     pcp=CCalcParams::NewFromString(cd.sCalcParams);
+#ifdef MADV_HUGEPAGE
     madvise(big_cache.buckets, sizeof(CCacheData) * big_cache.nBuckets,
         MADV_HUGEPAGE);
+#endif
 
     caches[0]=caches[1]=NULL;
     fHasCachedPos[0]=fHasCachedPos[1]=false;
