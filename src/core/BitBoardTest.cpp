@@ -1,5 +1,6 @@
 #include <cassert>
 #include <fstream>
+#include <sstream>
 
 #include "../n64/test.h"
 #include "BitBoard.h"
@@ -174,20 +175,43 @@ void TestBitBoard() {
 	TestTerminalValue();
 }
 
-// Return a vector of games from the test games file, which is located at working directory/TestGames.ggf
-std::vector<COsGame> LoadTestGames() {
+static bool IsBenchmarkGame(const COsGame& game) {
+	if (game.Result().status!=COsResult::kNormalEnd || game.ml.size()<46)
+		return false;
+
+	CQPosition pos;
+	pos.Initialize();
+
+	for (size_t iMove=0; iMove<game.ml.size(); iMove++) {
+		CMove move(game.ml[iMove].mv);
+		CMoves moves;
+		bool fHasMove=pos.CalcMoves(moves);
+		if (fHasMove?!moves.IsValid(move):!move.IsPass())
+			return false;
+		pos.MakeMove(move);
+	}
+	return true;
+}
+
+// Return a vector of games from the test games file, which is located at working directory/TestGames.ggf by default.
+std::vector<COsGame> LoadTestGames(const char* fname) {
 	std::vector<COsGame> sgTest;
 
-	std::string fn="TestGames.ggf";
+	std::string fn=fname;
 	std::ifstream is(fn.c_str());
 	if (!is){
 		std::cerr << "Can't open test games file " << fn << "\n";
 		std::cout << "Can't open test games file " << fn << "\n";
 	}
 	else {
-		COsGame game;
-		while (is >> game) {
-			if (game.Result().status==COsResult::kNormalEnd) {
+		std::string line;
+		while (getline(is, line)) {
+			if (line.empty())
+				continue;
+			std::istringstream iss(line);
+			COsGame game;
+			iss >> game;
+			if (IsBenchmarkGame(game)) {
 				sgTest.push_back(game);
 			}
 		}

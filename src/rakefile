@@ -6,17 +6,21 @@ if Gem.win_platform?
 else
   akro_multitask()
   $COMPILER_PREFIX = "ccache" if system("ccache --version", [:out, :err] => '/dev/null')
+  $OPENMP_FLAGS = "-fopenmp"
   system = `uname -s`
   machine = `uname -m`
 
   if system =~ /Linux/
     if machine =~ /^arm/
       $COMPILER = "clang++"
-      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror -Wno-error=deprecated-declarations"
+      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -I. -mfpu=neon -Wno-overloaded-virtual -Werror -Wno-error=deprecated-declarations #{$OPENMP_FLAGS}"
+      $ADDITIONAL_LINK_FLAGS = $OPENMP_FLAGS
     elsif machine =~ /^x86/ || machine =~ /^amd64/
-      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -maes -I. -mbmi2"
+      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -msse4.2 -maes -I. -mbmi2 #{$OPENMP_FLAGS}"
+      $ADDITIONAL_LINK_FLAGS = $OPENMP_FLAGS
     elsif machine =~ /^aarch64/
-      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -I."
+      $COMPILE_FLAGS = "-std=c++14 -pthread -Wall -Werror -I. #{$OPENMP_FLAGS}"
+      $ADDITIONAL_LINK_FLAGS = $OPENMP_FLAGS
     else
       puts "Unknown machine #{machine}"
     end

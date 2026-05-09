@@ -6,6 +6,9 @@
 #include <cstring>
 #include "Store.h"
 #include <sstream>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 FileIo::FileIo(const std::string& path, bool forReading)  : m_path(path) {
 	const char* mode = forReading ? "rb" : "wb";
@@ -43,8 +46,16 @@ static std::string TempPath(const std::string& path) {
 	fnTemp[MAX_PATH]=0;
 	return std::string(fnTemp);
 #else
-  char buff[] = "/tmp/tempbkXXXXX";
-  return std::string(tmpnam(buff));
+	std::string tempPath = tempDir + "/tempbkXXXXXX";
+	int fd = mkstemp(&tempPath[0]);
+	if (fd == -1) {
+		std::ostringstream os;
+		os << "Unable to create temporary file " << tempPath << ' ' << strerror(errno) << std::endl;
+		fprintf(stderr, "%s", os.str().c_str());
+		exit(1);
+	}
+	close(fd);
+	return tempPath;
 #endif
 
 }

@@ -11,3 +11,7 @@ extern CEvaluator* evaluator;
 extern CMPCStats* mpcs;
 
 extern int hBookRead;
+
+#ifdef _OPENMP
+#pragma omp threadprivate(book, cache, evaluator, mpcs, hBookRead)
+#endif

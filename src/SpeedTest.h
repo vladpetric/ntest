@@ -7,5 +7,6 @@
 
 #pragma once
 
+void TestMoveSpeed(const char* fname, int endDepth, int midDepth);
 void TestMoveSpeed(int nMinutesOrDepth, int nGames, char* sMode);
 CQPosition PositionFromEmpties(const COsGame& game, int nEmpty);

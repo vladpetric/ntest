@@ -27,6 +27,35 @@ To quickly run a benchmark:
 
 The benchmark tests both the solver (from 26 empties), and the midgame searcher (36 empties, depth of 26).
 
+## Running a GGF benchmark with OpenMP
+
+The `t` benchmark mode can also run a GGF game file directly:
+
+```
+./release/ntest.exe t /path/to/games.ggf <end-depth> <mid-depth>
+```
+
+For example, from `src/`:
+
+```
+./release/ntest.exe t /home/vlad/oth/ntest-specv8/data/refspeed/input/Othello.01e4.256.ggf 20 21
+```
+
+This runs two benchmark passes:
+
+* the endgame/solve pass at `<end-depth>` empties
+* the midgame pass from 36 empties at `<mid-depth>`
+
+When built on Linux, the akro release build enables OpenMP with generic `-fopenmp` flags. Use `OMP_NUM_THREADS` to control parallelism:
+
+```
+OMP_NUM_THREADS=4 ./release/ntest.exe t /home/vlad/oth/ntest-specv8/data/refspeed/input/Othello.01e4.256.ggf 20 21
+OMP_NUM_THREADS=6 ./release/ntest.exe t /home/vlad/oth/ntest-specv8/data/refspeed/input/Othello.01e4.256.ggf 20 21
+OMP_NUM_THREADS=8 ./release/ntest.exe t /home/vlad/oth/ntest-specv8/data/refspeed/input/Othello.01e4.256.ggf 20 21
+```
+
+Run the command from `src/` so ntest finds its local `coefficients/` directory.
+
 For x86 builds, cmake should work as well. See BuildREADME.txt
 
 ## Other Resources

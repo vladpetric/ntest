@@ -15,6 +15,15 @@ class CNtestStream: public ggsstream {
 public:
     CNtestStream();
 
+    using ggsstream::HandleGGSTell;
+    using ggsstream::HandleGGSUnknown;
+    using ggsstream::HandleOsGameOver;
+    using ggsstream::HandleOsJoin;
+    using ggsstream::HandleOsMatchDelta;
+    using ggsstream::HandleOsRequestDelta;
+    using ggsstream::HandleOsUnknown;
+    using ggsstream::HandleOsUpdate;
+
     virtual void HandleGGS				(const CMsg* msg);
     virtual void HandleGGSLogin			();
     virtual void HandleGGSTell			(const CMsgGGSTell& msg);

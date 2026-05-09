@@ -28,6 +28,10 @@ bool abortRound;
 static double qtAbort;
 static double qtAbortBase;
 
+#ifdef _OPENMP
+#pragma omp threadprivate(qtAbort, qtAbortBase)
+#endif
+
 void WipeNodeStats() {
     nEvals+=nEvalsQuick;
     nEvalsQuick=0;

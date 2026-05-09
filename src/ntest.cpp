@@ -307,7 +307,10 @@ int main(int argc, char**argv, char**envp) {
 
     	if (mode==kSpeedTest) {
     		PrintStuff(false);
-    		TestMoveSpeed(cd1.MinutesOrDepth(), nGames, argv[1]+1);
+    		if (argc>4)
+    			TestMoveSpeed(argv[2], atoi(argv[3]), atoi(argv[4]));
+    		else
+    			TestMoveSpeed(cd1.MinutesOrDepth(), nGames, argv[1]+1);
     	}
 
     	///////////////////////////////////////////

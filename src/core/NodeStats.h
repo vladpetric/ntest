@@ -18,6 +18,10 @@
 extern u4 nEvalsQuick, nSNodesQuick;
 extern double nEvals, nSNodes, nINodes, nKFlips, nBBFlips;
 
+#ifdef _OPENMP
+#pragma omp threadprivate(nEvalsQuick, nSNodesQuick, nEvals, nSNodes, nINodes, nKFlips, nBBFlips)
+#endif
+
 class CNodeStats {
 public:
     double nINodes, nSNodes, nKFlips, nBBFlips, nEvals;
@@ -38,6 +42,10 @@ inline std::ostream& operator<<(std::ostream& os, const CNodeStats& ns) { ns.Out
 // thinking on opponent's time
 extern bool abortRound;
 extern bool abortOnInput;
+
+#ifdef _OPENMP
+#pragma omp threadprivate(abortRound)
+#endif
 
 void WipeNodeStats();
 void SetAbortTime(double seconds);

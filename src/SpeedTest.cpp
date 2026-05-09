@@ -4,11 +4,16 @@
 // GPLv3.txt and License.txt in the instructions subdirectory for details.
 
 // test source file
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include <cstring>
 #include <fstream>
 #include <string>
 #include <iomanip>
 #include <math.h>
+#include <memory>
+#include <utility>
 #include "core/Moves.h"
 #include "core/QPosition.h"
 #include "core/Cache.h"
@@ -55,6 +60,69 @@ const int kPrintTestHeader=1;
 const int kPrintScrzebra=2;
 const int kPrintValues=4;
 const int kOnlyFinalRound=8;
+
+static void CheckBenchmarkDepth(const CComputerDefaults& cd, int nEmpty, int height) {
+    std::unique_ptr<CCalcParams> pcp(CCalcParams::NewFromString(cd.sCalcParams));
+    const CHeightInfo hi=pcp->MinHeight(nEmpty);
+    assert(hi.height==height || hi.height==nEmpty-hSolverStart);
+    if (nEmpty==36) {
+    	assert(hi.height==height);
+    	assert(!hi.IsKnownProbableSolve());
+    }
+}
+
+static std::pair<CQPosition, CMVK> TestBenchmarkGame(const COsGame& game, int nEmpty, CPlayerComputer& computer) {
+    computer.Clear();
+
+    CQPosition pos = PositionFromEmpties(game, nEmpty);
+    CMVK mvk;
+    CSearchInfo si=computer.DefaultSearchInfo(pos.BlackMove(),CSearchInfo::kNeedMove+CSearchInfo::kNeedValue,1e6, 0);
+    si.SetPrintLevel(0);
+    computer.GetChosen(si, pos, mvk, false);
+
+    return std::make_pair(pos, mvk);
+}
+
+void TestMidgameSpeed(const char* fname, int nEmpty, int height) {
+    const std::vector<COsGame> sgTest = LoadTestGames(fname);
+    std::vector<std::pair<CQPosition, CMVK> > results(sgTest.size());
+
+    CComputerDefaults cd;
+    cd.cEval='J';
+    cd.cCoeffSet='A';
+    cd.iPruneMidgame=4;
+    cd.iPruneEndgame=5;
+    cd.booklevel=CComputerDefaults::kNoBook;
+    cd.fsPrint=-1;
+
+    std::ostringstream os;
+    os << "s" << height;
+    cd.sCalcParams = os.str();
+    CheckBenchmarkDepth(cd, nEmpty, height);
+
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+    CPlayerComputer computer(cd);
+#pragma omp for schedule(dynamic, 3)
+    for (int iGame=0; iGame<static_cast<int>(sgTest.size()); iGame++) {
+    	results[iGame] = TestBenchmarkGame(sgTest[iGame], nEmpty, computer);
+    }
+    }
+#else
+    CPlayerComputer computer(cd);
+    for (size_t iGame=0; iGame<sgTest.size(); iGame++) {
+    	results[iGame] = TestBenchmarkGame(sgTest[iGame], nEmpty, computer);
+    }
+#endif
+
+    for (size_t iGame=0; iGame<results.size(); iGame++) {
+    	results[iGame].first.Print(false);
+    	printf("Value: %d\n\n\n", results[iGame].second.value);
+    }
+
+    fflush(stdout);
+}
 
 void TestMidgameSpeed(int nEmpty, CHeightInfo hi, int nGames, int flags) {
     double tRun, tTotal, geoMean;
@@ -281,3 +349,8 @@ void TestMoveSpeed(int hSolveFrom, int nGames, char* sMode) {
     	const int hMidgame=28;
     	TestMidgameSpeed(36, CHeightInfo(hMidgame,4,false), 12, kPrintTestHeader);
 }    
+
+void TestMoveSpeed(const char* fname, int endDepth, int midDepth) {
+    TestMidgameSpeed(fname, endDepth, endDepth);
+    TestMidgameSpeed(fname, 36, midDepth);
+}

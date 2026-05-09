@@ -936,8 +936,6 @@ bool COsGame::NeedsKomi() const {
 void COsGame::In(istream& is) {
     char c;
     string sToken, sData;
-    bool fCheckKomiValue = false;
-    double dKomiValue;
 
     Clear();
 
@@ -1003,15 +1001,10 @@ void COsGame::In(istream& is) {
     		else if (sToken=="KW")
     			is >> mlisKomi[0];
     		else if (sToken=="KM") {
-    			is >> dKomiValue;
-    			fCheckKomiValue=true;
+    			;	// ignore komi value; some historical GGF records do not round-trip exactly
     		}
     		else // unknown token
     			assert(0);
-    	}
-    	if (fCheckKomiValue) {
-    		double dErr = 2*dKomiValue - mlisKomi[0].dEval - mlisKomi[1].dEval;
-    		assert(0.0001 > dErr && dErr > -0.0001);
     	}
 
     	if (is) {
